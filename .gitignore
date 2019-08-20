@@ -1,2 +1,3 @@
 rosbag/*.mp4
 rosbag/*.bag
+.vscode/*
