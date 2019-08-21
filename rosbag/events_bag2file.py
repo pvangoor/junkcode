@@ -1,17 +1,15 @@
-import sys, getopt, os
+import sys, os
 import rosbag
 
 import cv2
 import cv_bridge
 import progressbar
 
-try:
-    opts, args = getopt.getopt(sys.argv[1:],"b:")
-except getopt.GetoptError:
-    print 'events_bag2file.py -b <bagfile>'
-    sys.exit(2)
-
-bagname = 'calib_texture_50.bag'
+argc = len(sys.argv)
+if (argc == 1):
+    bagname = 'calib_texture_50.bag'
+elif (argc == 2):
+    bagname = sys.argv[1]
 
 bag = rosbag.Bag(bagname, 'r')
 messageNumber = bag.get_message_count()
