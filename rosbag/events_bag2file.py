@@ -1,5 +1,6 @@
 import sys, os
 import rosbag
+import csv
 
 import cv2
 import cv_bridge
@@ -27,6 +28,9 @@ imagetimefname = outputdir+"/"+"images.txt"
 imagetimefile = open(imagetimefname, 'w')
 eventFname = outputdir+"/"+"events.txt"
 eventFile = open(eventFname, 'w')
+eventFname2 = outputdir+"/"+"events.csv"
+eventFile2 = open(eventFname2, 'w')
+eventCSV = csv.writer(eventFile2)
 imagedir = outputdir+"/"+"images"
 if not os.path.exists(imagedir):
     os.makedirs(imagedir)
@@ -51,6 +55,9 @@ for topic, msg, t in bag.read_messages():
             timestamp = "{:d}.{:09d}".format(emsg.ts.secs,emsg.ts.nsecs)
             eline = "{} {:d} {:d} {:d}\n".format(timestamp, emsg.x, emsg.y, emsg.polarity)
             eventFile.writelines(eline)
+
+            elist = [timestamp, emsg.x, emsg.y, emsg.polarity]
+            eventCSV.writerow(elist)
 
     else:
         print topic
