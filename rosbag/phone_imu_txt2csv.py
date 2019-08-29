@@ -1,22 +1,8 @@
-'''
-Phone Sensor Data Converter: txt to csv
-Usage: phone_imu_txt2csv.py -f"
-Arguments:
- -f, --file         The file containing IMU data in the sensor log format.
-
-Flags:
- -h                 help
-'''     
-
 import csv
 import numpy as np
 import progressbar
 
-import getopt
-import sys
-
-def usage():
-    print sys.exit(__doc__)
+import argparse
 
 def file_len(fname):
     with open(fname) as f:
@@ -25,7 +11,7 @@ def file_len(fname):
     return i + 1
 
 def write_csv_msg(writer, msg_dict, timestamp):
-    record_list = ['GYR', 'ACC']
+    record_list = ['GYR', 'RAWGYR', 'ACC']
     row = [timestamp]
     for record in record_list:
         if record in msg_dict:
@@ -35,27 +21,20 @@ def write_csv_msg(writer, msg_dict, timestamp):
     else:
         writer.writerow(row)
 
+parser = argparse.ArgumentParser(description="Process a sensor log file.")
+parser.add_argument("fileName", metavar="f", type=str, nargs=1, help="The name of the txt file to be processed.")
+args = parser.parse_args()
+
+
+imu_fname_txt = args.fileName[0]
+if not imu_fname_txt.endswith(".txt"):
+    imu_fname_txt = imu_fname_txt + ".txt"
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "f:", ["file="])
-except getopt.GetoptError as err:
-    print(str(err))
-    usage()
-
-for opt, arg in opts:
-    if opt == '-h':
-        usage()
-
-    elif opt in ("-f", "--file"):
-        imu_fname_txt = arg
-        if not imu_fname_txt.endswith(".txt"):
-            imu_fname_txt = imu_fname_txt + ".txt"
-        
-        try:
-            imu_file_txt = open(imu_fname_txt, 'r')
-        except IOError:
-            print "Could not find the IMU text file."
-            sys.exit(1)
+    imu_file_txt = open(imu_fname_txt, 'r')
+except IOError:
+    print "Could not find the IMU text file."
+    raise(IOError)
 
 progBar = progressbar.ProgressBar(max_value=file_len(imu_fname_txt))
 

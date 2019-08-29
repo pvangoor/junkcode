@@ -1,3 +1,6 @@
 rosbag/*.mp4
 rosbag/*.bag
 .vscode/*
+
+arucoTest/build/*
+arucoTest/.vscode/*
