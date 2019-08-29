@@ -25,7 +25,7 @@ def file_len(fname):
     return i + 1
 
 def write_csv_msg(writer, msg_dict, timestamp):
-    record_list = ['GYR', 'ACC', 'MAG']
+    record_list = ['GYR', 'ACC']
     row = [timestamp]
     for record in record_list:
         if record in msg_dict:

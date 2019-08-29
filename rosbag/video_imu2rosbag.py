@@ -35,7 +35,7 @@ def file_len(fname):
     return i + 1
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "i:v:tbs", ["imu=", "video=", "time=", "bag=", "scale="])
+    opts, args = getopt.getopt(sys.argv[1:], "i:v:t:bs", ["imu=", "video=", "time=", "bag=", "scale="])
 except getopt.GetoptError as err:
     print(str(err))
     usage()
@@ -85,6 +85,8 @@ imu_file_length = file_len(imu_fname)
 imu_file = open(imu_fname, 'r')
 imu_reader = csv.reader(imu_file)
 
+imu_start = -1
+
 print("Processing IMU...")
 progBar = progressbar.ProgressBar(max_value=imu_file_length)
 count = 0
@@ -98,8 +100,8 @@ for row in imu_reader:
     gyr_xyz = [float(a) for a in row[1:4]]
     acc_xyz = [float(a) for a in row[4:7]]
 
-    # print gxyz
-    # print axyz
+    if imu_start < 0:
+        imu_start = timestamp
 
     rosimu = Imu()
     rosimu.header.stamp = rospy.Time(timestamp)
@@ -124,20 +126,25 @@ cap = cv2.VideoCapture(video_fname)
 total_num_frames = cap.get(cv2.CAP_PROP_FRAME_COUNT)
 frame_rate = cap.get(cv2.CAP_PROP_FPS)
 
-frame_time = time_offset
+frame_time = time_offset + imu_start
 flag, frame = cap.read()
 
 print("Processing video...")
 progBar = progressbar.ProgressBar(max_value=total_num_frames)
 frame_count = 0
+last_frame_time = -1e8
 while (flag):
-    height, width = frame.shape[:2]
-    frame = cv2.resize(frame,(int(width*scale), int(height*scale)), interpolation = cv2.INTER_AREA)
-    msg = bridge.cv2_to_imgmsg(frame, "passthrough")
-    ros_time = rospy.Time(frame_time)
-    msg.header.stamp = ros_time
+    # Write frames at 20Hz only
+    if (frame_time - last_frame_time) >= 1.0/20.0:
+        height, width = frame.shape[:2]
+        frame = cv2.resize(frame,(int(width*scale), int(height*scale)), interpolation = cv2.INTER_AREA)
+        msg = bridge.cv2_to_imgmsg(frame, "passthrough")
+        ros_time = rospy.Time(frame_time)
+        msg.header.stamp = ros_time
 
-    bag.write('/cam0/image_raw/', msg, ros_time)
+        bag.write('/cam0/image_raw/', msg, ros_time)
+
+        last_frame_time = frame_time
 
     frame_time += 1/frame_rate
     flag, frame = cap.read()
