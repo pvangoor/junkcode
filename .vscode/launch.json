@@ -4,13 +4,23 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+
         {
-            "name": "Python: Current File",
+            "name": "Phone txt to CSV",
             "type": "python",
             "request": "launch",
-            "program": "${file}",
+            "program": "${workspaceFolder}/rosbag/phone_imu_txt2csv.py",
             "console": "integratedTerminal",
-            "args" : ["-v", "calibphone"]
+            "args" : ["rosbag/phone_stationary2.txt"]
+        }
+
+        {
+            "name": "Video & IMU to Rosbag",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/rosbag/video_imu2rosbag.py",
+            "console": "integratedTerminal",
+            "args" : ["-i", "rosbag/phoneCalib2IMU.csv", "-v", "rosbag/phoneCalib2.mp4", "-t", "13.526967"]
         }
     ]
 }

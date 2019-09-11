@@ -10,8 +10,7 @@ def file_len(fname):
             pass
     return i + 1
 
-def write_csv_msg(writer, msg_dict, timestamp):
-    record_list = ['GYR', 'RAWGYR', 'ACC']
+def write_csv_msg(writer, msg_dict, timestamp, record_list):
     row = [timestamp]
     for record in record_list:
         if record in msg_dict:
@@ -22,6 +21,7 @@ def write_csv_msg(writer, msg_dict, timestamp):
         writer.writerow(row)
 
 parser = argparse.ArgumentParser(description="Process a sensor log file.")
+parser.add_argument("--raw", action='store_false', help="Output raw sensor data.")
 parser.add_argument("fileName", metavar="f", type=str, nargs=1, help="The name of the txt file to be processed.")
 args = parser.parse_args()
 
@@ -36,13 +36,25 @@ except IOError:
     print "Could not find the IMU text file."
     raise(IOError)
 
+header_row = ["TIME"]
+if args.raw:
+    record_list = ['GYR', 'ACC', 'MAG']
+    for record in record_list:
+        header_row += [record+pos for pos in ("X","Y","Z")]
+    imu_fname_csv = imu_fname_txt[:-4] + ".csv"
+else:
+    record_list = ['RAWGYR', 'RAWMAG']
+    for record in record_list:
+        header_row += [record+pos for pos in ("X","Y","Z","BX","BY","BZ")]
+    imu_fname_csv = imu_fname_txt[:-4] + "_RAW" + ".csv"
+
 progBar = progressbar.ProgressBar(max_value=file_len(imu_fname_txt))
 
-imu_fname_csv = imu_fname_txt[:-4] + ".csv"
+
 imu_file_csv = open(imu_fname_csv, 'w')
 imu_csv_writer = csv.writer(imu_file_csv)
 
-header_row = ["TIME", "GYRX", "GYRY", "GYRZ", "ACCX", "ACCY", "ACCZ", "MAGX", "MAGY", "MAGZ"]
+
 imu_csv_writer.writerow(header_row)
 
 
@@ -67,7 +79,7 @@ for txt_row in imu_file_txt:
     
     else:
         # Write when a new timestamp appears
-        write_csv_msg(imu_csv_writer, msg_dict, timestamp)
+        write_csv_msg(imu_csv_writer, msg_dict, timestamp, record_list)
         current_time = timestamp
         msg_dict = {msg_type:msg_val}
 

@@ -30,11 +30,13 @@ variances = NaN(size(sampleSelection,1),3);
 variances2 = NaN(size(sampleSelection,1),3);
 for s = 1:numel(sampleSelection)
 %     variances(s,:) = computeGyroVar(gyro, tau0, sampleSelection(s));
-    variances2(s,:) = computeGyroVar2(acc, tau0, sampleSelection(s));
+    variances2(s,:) = computeGyroVar2(gyro, tau0, sampleSelection(s));
     
 end
 taus = sampleSelection * tau0;
-loglog(taus,variances2,'-o');
+loglog(taus,variances2,'-');
+xlabel("Time (s)")
+ylabel("Allan Variance")
 grid;
 
 function gyroVar = computeGyroVar(angles, tau0, m)
