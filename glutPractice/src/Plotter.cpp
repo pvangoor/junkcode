@@ -2,6 +2,9 @@
 // #include "GL/glut.h"
 #include "GL/freeglut.h"
 #include "eigen3/Eigen/Geometry"
+#include <iostream>
+
+using namespace std;
 
 # define PI           3.14159265358979323846  /* pi */
 
@@ -10,6 +13,34 @@ Plotter* Plotter::currentInstance;
 Plotter::Plotter() {
     currentInstance = this;
 
+    // // Initialise glut
+    // char * my_argv[1];
+    // int my_argc = 1;
+    // my_argv[0] = strdup("Plotter");
+
+    // glutInit(&my_argc, my_argv);
+    // glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
+    // glutInitWindowPosition(100,100);
+    // glutInitWindowSize(1280, 720);
+    // glutCreateWindow("Plotter window");
+
+    this->ratio = 1280 * 1.0 / 720;
+
+    // // register callbacks
+    // glutDisplayFunc(&Plotter::wrap_renderPoints);
+    // // glutReshapeFunc(&Plotter::wrap_changeWindowSize);
+    // glutIdleFunc(&Plotter::wrap_renderPoints);
+
+    // // respond to mouse
+    // // glutMouseFunc(&Plotter::wrap_mouseButton);
+	// // glutMotionFunc(&Plotter::wrap_mouseMove);
+
+    // // Enter glut main loop
+
+    this->plottingThread = thread(currentInstance->startThread);
+}
+
+void Plotter::startThread() {
     // Initialise glut
     char * my_argv[1];
     int my_argc = 1;
@@ -20,8 +51,6 @@ Plotter::Plotter() {
     glutInitWindowPosition(100,100);
     glutInitWindowSize(1280, 720);
     glutCreateWindow("Plotter window");
-
-    this->ratio = 1280 * 1.0 / 720;
 
     // register callbacks
     glutDisplayFunc(&Plotter::wrap_renderPoints);
@@ -34,7 +63,7 @@ Plotter::Plotter() {
 
     // Enter glut main loop
 
-    this->plottingThread = thread(glutMainLoop);
+    glutMainLoop();
 }
 
 void Plotter::drawPoints(const vector<Vector3d>& newPoints, const Vector4d& color, const int& size) {
@@ -167,20 +196,20 @@ void Plotter::renderPoints() {
     }
 	glEnd();
 
-    // Draw lines
-    glEnable(GL_LINE_SMOOTH);
-    glLineWidth(4);
-    for (const PlotLine3& line : this->lines) {
-        glBegin(GL_LINE_STRIP);
+    // // Draw lines
+    // glEnable(GL_LINE_SMOOTH);
+    // glLineWidth(4);
+    // for (const PlotLine3& line : this->lines) {
+    //     glBegin(GL_LINE_STRIP);
         
-        glColor4f(line.color[0], line.color[1], line.color[2], line.color[3]);
-        for (const Vector3d& coords : line.coordsVec) {
-            glVertex3f(coords[0], coords[1], coords[2]);
-        }
-        glEnd();
-    }
+    //     glColor4f(line.color[0], line.color[1], line.color[2], line.color[3]);
+    //     for (const Vector3d& coords : line.coordsVec) {
+    //         glVertex3f(coords[0], coords[1], coords[2]);
+    //     }
+    //     glEnd();
+    // }
     
-
+    // cout << "did a loop" << endl;
 
     // this->angleY += 0.1;
 

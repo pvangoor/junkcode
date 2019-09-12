@@ -50,6 +50,8 @@ public:
     bool hold = false;
 
 private:
+    static void startThread();
+
     // Plotting functionality wrappers
     static void wrap_renderPoints() { currentInstance->renderPoints(); };
     static void wrap_changeWindowSize(int w, int h) { currentInstance->changeWindowSize(w, h); };
