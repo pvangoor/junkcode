@@ -3,3 +3,5 @@ rosbag/*.bag
 
 arucoTest/build/*
 arucoTest/.vscode/*
+
+*/build/*
