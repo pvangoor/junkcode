@@ -25,19 +25,19 @@ int main(int argc, char **argv) {
         pts.emplace_back(3*Vector3d::Random()+ Vector3d(1,1,1));
     }
 
-    vector<Vector3d> line(n);
-    for (int i=0; i<n; ++i) {
-        line[i] = Vector3d(cos(0.5*i),0.1*i,sin(0.5*i));
+    vector<Vector3d> line(5*n);
+    for (int i=0; i<5*n; ++i) {
+        line[i] = Vector3d(cos(0.1*i),0.02*sqrt(i),sin(0.1*i));
     }
 
     Plotter p;
     p.hold = true;
-    p.drawPoints(pts, Vector4d(0,0,1,0), 30);
-    // p.drawAxes(Matrix4d::Identity(), 1, 4);
-    // p.drawLine(line, Vector4d(0,0,0,1), 2);
-    // p.hold = false;
+    p.drawPoints(pts, Vector4d(0,0,1,0), 3);
+    p.drawAxes(Matrix4d::Identity(), 1, 4);
+    p.drawLine(line, Vector4d(0,0,0,1), 2);
+    p.hold = false;
 
-    // Plotter p;
+
     p.maintain();
 
     // startGlutWindow();

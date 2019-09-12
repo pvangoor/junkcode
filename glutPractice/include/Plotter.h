@@ -33,10 +33,10 @@ protected:
     PlotMotion plotMotionType = PlotMotion::NONE;
 
     Vector3d plotOrigin = Vector3d::Zero();
+    bool allowTranslation = true;
 
     // Data
-    vector<PlotPoint3> points;
-    vector<PlotLine3> lines;
+    vector<PlotData3> plotsData;
 
 public:
 
@@ -49,6 +49,12 @@ public:
 
     bool hold = false;
 
+    void lockOrigin(const Vector3d& origin = Vector3d::Zero()) {
+        allowTranslation = false;
+        plotOrigin = origin;
+    };
+    void unlockOrigin() {allowTranslation = true;};
+
 private:
     static void startThread();
 
@@ -57,14 +63,12 @@ private:
     static void wrap_changeWindowSize(int w, int h) { currentInstance->changeWindowSize(w, h); };
     static void wrap_mouseButton(int button, int state, int x, int y) { currentInstance->mouseButton(button, state, x, y); };
     static void wrap_mouseMove(int x, int y) { currentInstance->mouseMove(x, y); };
-    static void wrap_mouseWheel(int button, int dir, int x, int y) { currentInstance->mouseWheel(button, dir, x, y); };
 
     // Plotting functionality functions
     void changeWindowSize(int w, int h);
     void renderPoints();
     void mouseButton(int button, int state, int x, int y);
     void mouseMove(int x, int y);
-    void mouseWheel(int button, int dir, int x, int y);
 
     // Utility
     template<class T>
