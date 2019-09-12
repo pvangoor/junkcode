@@ -1,6 +1,9 @@
 #include "Plotter.h"
 // #include "GL/glut.h"
 #include "GL/freeglut.h"
+#include "eigen3/Eigen/Geometry"
+
+# define PI           3.14159265358979323846  /* pi */
 
 Plotter* Plotter::currentInstance;
 
@@ -18,6 +21,8 @@ Plotter::Plotter() {
     glutInitWindowSize(1280, 720);
     glutCreateWindow("Plotter window");
 
+    this->ratio = 1280 * 1.0 / 720;
+
     // register callbacks
     glutDisplayFunc(&Plotter::wrap_renderPoints);
     glutReshapeFunc(&Plotter::wrap_changeWindowSize);
@@ -32,7 +37,7 @@ Plotter::Plotter() {
     this->plottingThread = thread(glutMainLoop);
 }
 
-void Plotter::drawPoints(vector<Vector3d> newPoints, const Vector4d& color) {
+void Plotter::drawPoints(const vector<Vector3d>& newPoints, const Vector4d& color, const int& size) {
     if (!this->hold) {
         this->points.clear();
         this->lines.clear();
@@ -42,6 +47,7 @@ void Plotter::drawPoints(vector<Vector3d> newPoints, const Vector4d& color) {
         PlotPoint3 point;
         point.coords = {newPoint.x(), newPoint.y(), newPoint.z()};
         point.color = color;
+        point.size = size;
         this->points.emplace_back(point);
     }
     
@@ -55,7 +61,23 @@ void Plotter::drawPoints(vector<Vector3d> newPoints, const Vector4d& color) {
     plotOrigin = sum / max(n,1);
 }
 
-void Plotter::drawAxes(const Matrix4d& pose, const double& length) {
+void Plotter::drawLine(const vector<Vector3d>& newLine, const Vector4d& color, const int& size) {
+    if (!this->hold) {
+        this->points.clear();
+        this->lines.clear();
+    }
+
+    PlotLine3 line;
+    for (const Vector3d& linePoint : newLine) {
+        line.coordsVec.emplace_back(linePoint);
+    }
+    line.color = color;
+    line.size = size;
+    
+    this->lines.emplace_back(line);
+}
+
+void Plotter::drawAxes(const Matrix4d& pose, const double& length, const int& size) {
     if (!this->hold) {
         this->points.clear();
         this->lines.clear();
@@ -67,18 +89,21 @@ void Plotter::drawAxes(const Matrix4d& pose, const double& length) {
     xAxis.color = Vector4d(1,0,0,1);
     xAxis.coordsVec.emplace_back(origin);
     xAxis.coordsVec.emplace_back(origin+length*pose.block<3,1>(0,0));
+    xAxis.size = size;
     this->lines.emplace_back(xAxis);
     
     PlotLine3 yAxis;
     yAxis.color = Vector4d(0,1,0,1);
     yAxis.coordsVec.emplace_back(origin);
     yAxis.coordsVec.emplace_back(origin+length*pose.block<3,1>(0,1));
+    yAxis.size = size;
     this->lines.emplace_back(yAxis);
 
     PlotLine3 zAxis;
     zAxis.color = Vector4d(0,0,1,1);
     zAxis.coordsVec.emplace_back(origin);
     zAxis.coordsVec.emplace_back(origin+length*pose.block<3,1>(0,2));
+    zAxis.size = size;
     this->lines.emplace_back(zAxis);
 }
 
@@ -90,7 +115,7 @@ void Plotter::changeWindowSize(int w, int h) {
 	if (h == 0)
 		h = 1;
 
-	float ratio =  w * 1.0 / h;
+	this->ratio =  w * 1.0 / h;
 
 	// Use the Projection Matrix
 	glMatrixMode(GL_PROJECTION);
@@ -113,23 +138,30 @@ void Plotter::renderPoints() {
     glClearColor(0.75f, 0.75f, 0.75f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glMatrixMode(GL_MODELVIEW);
-    // Reset transformations
+    glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    // Set the camera
-	gluLookAt(	0.0f, 0.0f, 10.0f, // eye xyz 
-			    plotOrigin.x(), plotOrigin.y(),  plotOrigin.z(), // scene centre
-			    0.0f, 1.0f,  0.0f // 'Up' vector
-             );
+    gluPerspective(45,ratio,1,100);
 
-    glRotatef(this->angleX, 1.0, 0.0, 0.0);
-    glRotatef(this->angleY, 0.0, 1.0, 0.0);
+    Vector3d eye = plotOrigin + Quaterniond(sin(angleY*PI/360), 0, cos(angleY*PI/360), 0) *
+        Quaterniond(sin(angleX*PI/360), cos(angleX*PI/360), 0, 0) * Vector3d(0, 0, -zoom);
+
+    gluLookAt(	eye.x(), eye.y(), eye.z(), // eye xyz 
+            plotOrigin.x(), plotOrigin.y(), plotOrigin.z(), // scene centre
+            // 0.0f, 0.0f, 0.0f, // scene centre
+            0.0f, 1.0f,  0.0f // 'Up' vector
+            );
+    // glRotatef(this->angleX, 1.0, 0.0, 0.0);
+    // glRotatef(this->angleY, 0.0, 1.0, 0.0);
+    
+    
 
     // Draw points
     glEnable(GL_POINT_SMOOTH);
-    glPointSize(5);
-	glBegin(GL_POINTS);
+	glPointSize(3);
+    glBegin(GL_POINTS);
+    
     for(const PlotPoint3& point : this->points) {
+        
         glColor4f(point.color[0], point.color[1], point.color[2], point.color[3]);
         glVertex3f(point.coords[0], point.coords[1], point.coords[2]);
     }
@@ -137,9 +169,10 @@ void Plotter::renderPoints() {
 
     // Draw lines
     glEnable(GL_LINE_SMOOTH);
-    glLineWidth(5);
+    glLineWidth(4);
     for (const PlotLine3& line : this->lines) {
         glBegin(GL_LINE_STRIP);
+        
         glColor4f(line.color[0], line.color[1], line.color[2], line.color[3]);
         for (const Vector3d& coords : line.coordsVec) {
             glVertex3f(coords[0], coords[1], coords[2]);
@@ -166,7 +199,7 @@ void Plotter::mouseButton(int button, int state, int x, int y) {
             this->mouseOriginY = y;
             this->plotMotionType = PlotMotion::ROTATE;
         }
-    } else if (button = GLUT_RIGHT_BUTTON) {
+    } else if (button == GLUT_RIGHT_BUTTON) {
         if (state == GLUT_UP) {
             this->mouseOriginX = -1;
             this->mouseOriginY = -1;
@@ -174,7 +207,7 @@ void Plotter::mouseButton(int button, int state, int x, int y) {
         } else {
             this->mouseOriginX = x;
             this->mouseOriginY = y;
-            this->plotMotionType = PlotMotion::TRANSLATE;
+            this->plotMotionType = PlotMotion::SCALE;
         }
     }
 }
@@ -183,17 +216,16 @@ void Plotter::mouseMove(int x, int y) {
     if (plotMotionType == PlotMotion::ROTATE) {
         if (this->mouseOriginX >= 0) {
             // update rotation
-            this->angleY += (x - this->mouseOriginX) * 0.1f;
+            this->angleY += (x - this->mouseOriginX) * 0.5f;
             this->mouseOriginX = x;
 
-            this->angleX = constrain(this->angleX+(y - this->mouseOriginY) * 0.1f, -90.0f, 90.0f);
+            this->angleX = constrain(this->angleX+(y - this->mouseOriginY) * 0.5f, -90.0f, 90.0f);
             this->mouseOriginY = y;
         }
-    } else if (plotMotionType == PlotMotion::TRANSLATE) {
-            this->translateX += (x - this->mouseOriginX) * 0.1f;
-            this->mouseOriginX = x;
-
-            this->translateY -= (y - this->mouseOriginY) * 0.1f;
+    } else if (plotMotionType == PlotMotion::SCALE) {
+        if (this->mouseOriginY >= 0) {
+            this->zoom *= 1.0f + (y - this->mouseOriginY) * 0.01f;
             this->mouseOriginY = y;
+        }
     }
 }
