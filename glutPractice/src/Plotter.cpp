@@ -43,25 +43,21 @@ void Plotter::startThread() {
 }
 
 void Plotter::drawPoints(const vector<Vector3d>& newPoints, const Vector4d& color, const int& size) {
-    if (!this->hold) {
-        this->plotsData.clear();
-    }
-
+    if (!this->hold) this->plotsData.clear();
     this->plotsData.emplace_back(PlotData3(newPoints, GL_POINTS, color, size));
+}
+void Plotter::drawPoints(const vector<Vector3d>& newPoints, const vector<Vector4d>& colors, const int& size) {
+    if (!this->hold) this->plotsData.clear();
+    this->plotsData.emplace_back(PlotData3(newPoints, GL_POINTS, colors, size));
 }
 
 void Plotter::drawLine(const vector<Vector3d>& newLine, const Vector4d& color, const int& size) {
-    if (!this->hold) {
-        this->plotsData.clear();
-    }
-
+    if (!this->hold) this->plotsData.clear();
     this->plotsData.emplace_back(PlotData3(newLine, GL_LINE_STRIP, color, size));
 }
 
 void Plotter::drawAxes(const Matrix4d& pose, const double& length, const int& size) {
-    if (!this->hold) {
-        this->plotsData.clear();
-    }
+    if (!this->hold) this->plotsData.clear();
 
     Vector3d origin = pose.block<3,1>(0,3);
 

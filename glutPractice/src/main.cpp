@@ -20,9 +20,14 @@ int main(int argc, char **argv) {
     cout << "Hello GLUT!" << endl;
 
     // plot some random points
+    vector<Vector4d> colors;
     int n = 50;
     for (int i=0; i<n; ++i) {
         pts.emplace_back(3*Vector3d::Random()+ Vector3d(1,1,1));
+        Vector4d col = Vector4d::Random()/2 + 0.5*Vector4d::Ones();
+        col[3] = 1.0;
+        // cout << col << endl;
+        colors.emplace_back(col);
     }
 
     vector<Vector3d> line(5*n);
@@ -32,7 +37,7 @@ int main(int argc, char **argv) {
 
     Plotter p;
     p.hold = true;
-    p.drawPoints(pts, Vector4d(0,0,1,0), 3);
+    p.drawPoints(pts, colors, 3);
     p.drawAxes(Matrix4d::Identity(), 1, 4);
     p.drawLine(line, Vector4d(0,0,0,1), 2);
     p.hold = false;

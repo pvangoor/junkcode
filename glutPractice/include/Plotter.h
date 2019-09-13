@@ -44,6 +44,7 @@ public:
     void maintain() { plottingThread.join(); };
 
     void drawPoints(const vector<Vector3d>& newPoints, const Vector4d& color = Vector4d(0,0,1,1), const int& size=1);
+    void drawPoints(const vector<Vector3d>& newPoints, const vector<Vector4d>& color, const int& size=1);
     void drawLine(const vector<Vector3d>& newLine, const Vector4d& color = Vector4d(0,0,1,1), const int& size=1);
     void drawAxes(const Matrix4d& pose, const double& length = 1.0, const int& size=1);
 
