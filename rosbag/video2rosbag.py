@@ -1,23 +1,24 @@
-import sys, getopt
+import argparse
 import cv2
 import rosbag
 import rospy
 from sensor_msgs.msg import Image
 import cv_bridge
 
-argc = len(sys.argv)
-try:
-    opts, args = getopt.getopt(sys.argv[1:],"hv:b")
-except getopt.GetoptError:
-    print 'test.py -v <videofile> -b <bagfile>'
-    sys.exit(2)
+parser = argparse.ArgumentParser(description="Convert a video file to a rosbag.")
+parser.add_argument('video', metavar='v', type=str, help="The file name of the video to convert")
+args = parser.parse_args()
 
 bridge = cv_bridge.CvBridge()
 
-f = open('videoBag.bag', 'w')
+
+
+videoFname = args.video
+bagFname = videoFname[:-4] + ".bag"
+f = open(bagFname, 'w')
 bag = rosbag.Bag(f,'w')
 
-cap = cv2.VideoCapture("rosbag/calibphone.mp4")
+cap = cv2.VideoCapture(videoFname)
 flag, frame = cap.read()
 
 frame_rate = cap.get(cv2.CAP_PROP_FPS)
