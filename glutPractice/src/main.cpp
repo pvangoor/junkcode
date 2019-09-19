@@ -32,14 +32,14 @@ int main(int argc, char **argv) {
 
     vector<Vector3d> line(5*n);
     for (int i=0; i<5*n; ++i) {
-        line[i] = Vector3d(cos(0.1*i),0.02*sqrt(i),sin(0.1*i));
+        line[i] = Vector3d(cos(0.1*i),0.05*sqrt(i),sin(0.1*i));
     }
 
     Plotter p;
     p.hold = true;
-    p.drawPoints(pts, colors, 3);
-    p.drawAxes(Matrix4d::Identity(), 1, 4);
-    p.drawLine(line, Vector4d(0,0,0,1), 2);
+    p.drawPoints(pts, colors, 5);
+    p.drawAxes(Matrix4d::Identity(), 2, 4);
+    p.drawLine(line, Vector4d(0,0,0,1), 3);
     p.hold = false;
 
 

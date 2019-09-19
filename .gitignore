@@ -1,5 +1,5 @@
-rosbag/*.mp4
-rosbag/*.bag
+converters/*.mp4
+converters/*.bag
 
 arucoTest/build/*
 arucoTest/.vscode/*
