@@ -48,5 +48,5 @@ bag.close()
 if initialised:
     out.release()
 else:
-    print "Unable to find any messages under the given topic."
+    print("Unable to find any messages under the given topic.")
 
