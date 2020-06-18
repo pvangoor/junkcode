@@ -4,14 +4,22 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-
+        {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal"
+        },
         {
             "name": "Phone txt to CSV",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/rosbag/phone_imu_txt2csv.py",
             "console": "integratedTerminal",
-            "args" : ["rosbag/phone_stationary2.txt"]
+            "args": [
+                "rosbag/phone_stationary2.txt"
+            ]
         }
 
         {
@@ -20,7 +28,14 @@
             "request": "launch",
             "program": "${workspaceFolder}/rosbag/video_imu2rosbag.py",
             "console": "integratedTerminal",
-            "args" : ["-i", "rosbag/phoneCalib2IMU.csv", "-v", "rosbag/phoneCalib2.mp4", "-t", "13.526967"]
+            "args": [
+                "-i",
+                "rosbag/phoneCalib2IMU.csv",
+                "-v",
+                "rosbag/phoneCalib2.mp4",
+                "-t",
+                "13.526967"
+            ]
         }
     ]
 }
