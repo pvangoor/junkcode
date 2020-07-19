@@ -17,7 +17,7 @@ images = glob.glob(folderName+"*."+args.extension)
 images.sort()
 
 if len(images) == 0:
-    print 'No images found in "'+folderName+'"'
+    print('No images found in "'+folderName+'"')
     exit(-1)
 
 img0 = cv2.imread(images[0])
