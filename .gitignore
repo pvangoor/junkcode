@@ -7,3 +7,5 @@ arucoTest/.vscode/*
 */build/*
 
 pdfs/*
+
+*pdf_*.py
