@@ -33,3 +33,11 @@ class LieGroup(ABC):
     @staticmethod
     def exp(lie_alg_vector):
         pass
+    
+    @staticmethod
+    def readFromCSV(line, format_spec):
+        pass
+    
+    @abstractmethod
+    def writeToCSV(self, format_spec):
+        pass

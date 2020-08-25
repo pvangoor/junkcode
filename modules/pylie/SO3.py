@@ -49,5 +49,33 @@ class SO3(LieGroup.LieGroup):
         result._rot.from_rotvec(so3vec)
         return result
 
+    
+    @staticmethod
+    def readFromCSV(line, format_spec="q"):
+        # Possible formats are
+        # R : 9 entry matrix (row-by-row)
+        # q : 4 entry quaternion (scalar last)
+        # w : 4 entry quaternion (scalar first)
+        # r : 3 entry log vector
+        result = SO3()
+        if format_spec == "R":
+            mat = np.reshape(np.array([float(line[i]) for i in range(9)]), (3,3))
+            result._rot.from_matrix(mat)
+        elif format_spec == "q":
+            quat = np.array([float(line[i]) for i in range(4)])
+            result._rot.from_quat(quat)
+        elif format_spec == "w":
+            quat = np.array([float(line[i]) for i in [1,2,3,0]])
+            result._rot.from_quat(quat)
+        elif format_spec == "r":
+            rotvec = np.array([float(line[i]) for i in range(3)])
+            result._rot.from_rotvec(rotvec)
+        else:
+            return NotImplemented
+        return result
+
+    def writeToCSV(self, format_spec):
+        pass
+
 if __name__ == "__main__":
     R = SO3()
