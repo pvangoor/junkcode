@@ -8,3 +8,5 @@ arucoTest/.vscode/*
 
 pdfs/*
 *.pyc
+
+*pdf_*.py
