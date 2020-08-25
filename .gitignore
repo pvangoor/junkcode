@@ -7,3 +7,4 @@ arucoTest/.vscode/*
 */build/*
 
 pdfs/*
+*.pyc
