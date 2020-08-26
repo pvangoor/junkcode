@@ -55,31 +55,31 @@ class SO3(LieGroup.LieGroup):
 
     @staticmethod
     def validFormats() -> list:
-        return ['R', 'q', 'w', 'r']
-
-    @staticmethod
-    def read_from_csv(line, format_spec="q") -> 'SO3':
         # Possible formats are
         # R : 9 entry matrix (row-by-row)
         # q : 4 entry quaternion (scalar last)
         # w : 4 entry quaternion (scalar first)
         # r : 3 entry log vector
+        return ['R', 'q', 'w', 'r']
+
+    @staticmethod
+    def read_from_csv(line, format_spec="q") -> 'SO3':
         result = SO3()
         if format_spec == "R":
             mat = np.reshape(np.array([float(line[i]) for i in range(9)]), (3,3))
-            result._rot.from_matrix(mat)
+            result._rot = Rotation.from_matrix(mat)
             line = line[9:]
         elif format_spec == "q":
             quat = np.array([float(line[i]) for i in range(4)])
-            result._rot.from_quat(quat)
+            result._rot = Rotation.from_quat(quat)
             line = line[4:]
         elif format_spec == "w":
             quat = np.array([float(line[i]) for i in [1,2,3,0]])
-            result._rot.from_quat(quat)
+            result._rot = Rotation.from_quat(quat)
             line = line[4:]
         elif format_spec == "r":
             rotvec = np.array([float(line[i]) for i in range(3)])
-            result._rot.from_rotvec(rotvec)
+            result._rot = Rotation.from_rotvec(rotvec)
             line = line[3:]
         else:
             return NotImplemented
