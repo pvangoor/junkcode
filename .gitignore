@@ -10,3 +10,4 @@ pdfs/*
 *.pyc
 
 *pdf_*.py
+.vscode/.ropeproject/*
