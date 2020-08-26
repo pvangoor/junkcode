@@ -22,7 +22,7 @@ parser.add_argument("viconFile", metavar="v", type=str, nargs=1, help="The name 
 parser.add_argument("arucoFile", metavar="a", type=str, nargs=1, help="The name of the stamped aruco poses file.")
 args = parser.parse_args()
 
-print "Collecting vicon pose data..."
+print("Collecting vicon pose data...")
 with open(args.viconFile[0], 'r') as viconFile:
     viconReader = csv.reader(viconFile)
     next(viconReader)
@@ -30,7 +30,7 @@ with open(args.viconFile[0], 'r') as viconFile:
         time = float(row[0])
         t = np.array([[float(x)] for x in row[1:4]])
         q = rod2quat(np.array([[float(x)] for x in row[4:7]]))
-        print q
+        print(q)
         
 
 
@@ -38,7 +38,7 @@ with open(args.viconFile[0], 'r') as viconFile:
 
 
 
-print "Determining marker ids present in video..."
+print("Determining marker ids present in video...")
 idDict = {}
 with open(args.arucoFile[0], 'r') as arucoFile:
     arucoReader = csv.reader(arucoFile)
@@ -52,8 +52,8 @@ with open(args.arucoFile[0], 'r') as arucoFile:
         else:
             idDict[idNumber] = 1
 
-print "Found (markers:instances):"
-print idDict
+print("Found (markers:instances):")
+print(idDict)
 
 
 

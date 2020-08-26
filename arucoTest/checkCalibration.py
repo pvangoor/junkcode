@@ -8,8 +8,8 @@ K = K.mat()
 dist = calibFile.getNode("distortion_coefficients")
 dist = dist.mat()
 
-print K
-print dist
+print(K)
+print(dist)
 
 cap = cv2.VideoCapture("charuco2.mp4")
 

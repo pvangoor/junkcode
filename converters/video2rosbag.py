@@ -34,7 +34,7 @@ while (flag):
     if (time - last_time >= 1.0/4.0):
         bag.write('/cam0/image_raw/', msg, ros_time)
         last_time = time
-        print count
+        print(count)
     count += 1
 
     cv2.imshow('debug', frame)

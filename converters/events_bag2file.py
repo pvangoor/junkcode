@@ -60,7 +60,7 @@ for topic, msg, t in bag.read_messages():
             eventCSV.writerow(elist)
 
     else:
-        print topic
+        print(topic)
     
     msgCounter += 1
     progBar.update(msgCounter)

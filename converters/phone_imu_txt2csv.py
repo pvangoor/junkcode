@@ -33,7 +33,7 @@ if not imu_fname_txt.endswith(".txt"):
 try:
     imu_file_txt = open(imu_fname_txt, 'r')
 except IOError:
-    print "Could not find the IMU text file."
+    print("Could not find the IMU text file.")
     raise(IOError)
 
 header_row = ["TIME"]

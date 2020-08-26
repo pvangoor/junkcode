@@ -6,7 +6,7 @@ import numpy as np
 import progressbar
 
 def quat2rod(q):
-    print q[3]
+    print(q[3])
     rod = [s / q[3] for s in q[:3]]
     return rod
 

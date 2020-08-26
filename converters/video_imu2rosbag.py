@@ -26,7 +26,7 @@ import getopt
 import sys
 
 def usage():
-    print sys.exit(__doc__)
+    print(sys.exit(__doc__))
 
 def file_len(fname):
     with open(fname) as f:
