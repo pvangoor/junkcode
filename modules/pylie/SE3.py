@@ -9,7 +9,7 @@ class SE3(LieGroup.LieGroup):
         self._x = x
     
     def Adjoint(self):
-        pass
+        return NotImplemented
     
     def __mul__(self, other):
         if isinstance(other, SE3):
@@ -43,12 +43,12 @@ class SE3(LieGroup.LieGroup):
         return result
     
     def log(self):
-        pass
+        return NotImplemented
     
     @staticmethod
     def exp(se3vec):
         assert se3vec.shape == (6,1), "Invalid shape of Lie algebra vector."
-        pass
+        return NotImplemented
 
     @staticmethod
     def validFormats():

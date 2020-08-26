@@ -15,7 +15,7 @@ class SIM3(LieGroup.LieGroup):
         self._s = s
     
     def Adjoint(self):
-        pass
+        return NotImplemented
     
     def __mul__(self, other):
         if isinstance(other, SIM3):
@@ -51,12 +51,12 @@ class SIM3(LieGroup.LieGroup):
         return result
     
     def log(self):
-        pass
+        return NotImplemented
     
     @staticmethod
     def exp(sim3vec):
         assert sim3vec.shape == (7,1), "Invalid shape of Lie algebra vector."
-        pass
+        return NotImplemented
 
     @staticmethod
     def validFormats():
