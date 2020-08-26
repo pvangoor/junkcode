@@ -49,9 +49,12 @@ class SO3(LieGroup.LieGroup):
         result._rot.from_rotvec(so3vec)
         return result
 
-    
     @staticmethod
-    def readFromCSV(line, format_spec="q"):
+    def validFormats() -> list:
+        return ['R', 'q', 'w', 'r']
+
+    @staticmethod
+    def read_from_csv(line, format_spec="q") -> 'SO3':
         # Possible formats are
         # R : 9 entry matrix (row-by-row)
         # q : 4 entry quaternion (scalar last)
@@ -61,21 +64,64 @@ class SO3(LieGroup.LieGroup):
         if format_spec == "R":
             mat = np.reshape(np.array([float(line[i]) for i in range(9)]), (3,3))
             result._rot.from_matrix(mat)
+            line = line[9:]
         elif format_spec == "q":
             quat = np.array([float(line[i]) for i in range(4)])
             result._rot.from_quat(quat)
+            line = line[4:]
         elif format_spec == "w":
             quat = np.array([float(line[i]) for i in [1,2,3,0]])
             result._rot.from_quat(quat)
+            line = line[4:]
         elif format_spec == "r":
             rotvec = np.array([float(line[i]) for i in range(3)])
             result._rot.from_rotvec(rotvec)
+            line = line[3:]
         else:
             return NotImplemented
         return result
 
-    def writeToCSV(self, format_spec):
-        pass
+    def write_to_csv(self, format_spec) -> list:
+        # Possible formats are
+        # R : 9 entry matrix (row-by-row)
+        # q : 4 entry quaternion (scalar last)
+        # w : 4 entry quaternion (scalar first)
+        # r : 3 entry log vector
+        if format_spec == "R":
+            mat = self._rot.as_matrix()
+            result = mat.ravel().tolist()
+        elif format_spec == "q":
+            quat = self._rot.as_quat()
+            result = quat.ravel().tolist()
+        elif format_spec == "w":
+            quat = self._rot.as_quat()
+            temp = quat.ravel().tolist()
+            result = [temp[i] for i in [3,0,1,2]]
+        elif format_spec == "r":
+            rotvec = self._rot.as_rotvec()
+            result = rotvec.ravel().tolist()
+        else:
+            return NotImplemented
+        return result
+    
+    @staticmethod
+    def gen_csv_header(format_spec):
+        # Possible formats are
+        # R : 9 entry matrix (row-by-row)
+        # q : 4 entry quaternion (scalar last)
+        # w : 4 entry quaternion (scalar first)
+        # r : 3 entry log vector
+        if format_spec == "R":
+            result = "R11,R12,R13,R21,R22,R23,R31,R32,R33".split()
+        elif format_spec == "q":
+            result = "qx,qy,qz,qw".split()
+        elif format_spec == "w":
+            result = "qw,qx,qy,qz".split()
+        elif format_spec == "r":
+            result = "rx,ry,rz".split()
+        else:
+            return NotImplemented
+        return result
 
 if __name__ == "__main__":
     R = SO3()
