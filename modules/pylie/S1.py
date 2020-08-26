@@ -1,5 +1,6 @@
 import LieGroup
 import numpy as np
+from R3 import R3 as R3
 
 class S1(LieGroup.LieGroup):
     # The Lie group of dim 1 scaling.
@@ -15,6 +16,12 @@ class S1(LieGroup.LieGroup):
             result = S1()
             result._scale = self._scale * other._scale
             return result
+        elif isinstance(other, np.ndarray):
+            return float(self._scale) * other
+        elif isinstance(other, R3):
+            result = R3()
+            result._trans = self._scale * other._trans
+            return result
         return NotImplemented
     
     def __truediv__(self, other):
@@ -22,8 +29,6 @@ class S1(LieGroup.LieGroup):
             result = S1()
             result._scale = self._scale / other._scale
             return result
-        elif isinstance(other, np.ndarray):
-            return self._scale * other
         return NotImplemented
     
     def inv(self):

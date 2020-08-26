@@ -1,4 +1,5 @@
 import LieGroup
+from R3 import R3 as R3
 from scipy.spatial.transform import Rotation
 import numpy as np
 
@@ -14,6 +15,11 @@ class SO3(LieGroup.LieGroup):
             result = SO3()
             result._rot = self._rot * other._rot
             return result
+        elif isinstance(other, np.ndarray) and other.shape == (3,1):
+            return self._rot.as_matrix() @ other
+        elif isinstance(other, R3):
+            result = R3()
+            result._trans = self._rot.as_matrix() @ other._trans
         return NotImplemented
     
     def __truediv__(self, other):
@@ -21,8 +27,6 @@ class SO3(LieGroup.LieGroup):
             result = SO3()
             result._rot = self._rot * other._rot.inv()
             return result
-        elif isinstance(other, np.ndarray) and other.shape == (3,1):
-            return self._rot.as_matrix() @ other
         return NotImplemented
     
     def inv(self):

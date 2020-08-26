@@ -18,6 +18,9 @@ class R3(LieGroup.LieGroup):
             return result
         return NotImplemented
     
+    def __add__(self, other):
+        return self * other
+    
     def __truediv__(self, other):
         if isinstance(other, R3):
             result = R3()
@@ -30,6 +33,9 @@ class R3(LieGroup.LieGroup):
                 return self.as_matrix() @ other
         return NotImplemented
     
+    def __sub__(self, other):
+        return self / other
+
     def inv(self):
         result = R3()
         result._trans = -self._trans
@@ -67,6 +73,7 @@ class R3(LieGroup.LieGroup):
         result = R3()
         if format_spec == "x":
             result._trans = np.reshape(np.array([float(line[i]) for i in range(3)]), (3,1))
+            line = line[3:]
         else:
             return NotImplemented
         return result
