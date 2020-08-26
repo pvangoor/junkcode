@@ -21,6 +21,9 @@ class R3(LieGroup.LieGroup):
     def __add__(self, other):
         return self * other
     
+    def __neg__(self):
+        return self.inv()
+    
     def __truediv__(self, other):
         if isinstance(other, R3):
             result = R3()

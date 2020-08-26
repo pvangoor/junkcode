@@ -20,6 +20,7 @@ class SO3(LieGroup.LieGroup):
         elif isinstance(other, R3):
             result = R3()
             result._trans = self._rot.as_matrix() @ other._trans
+            return result
         return NotImplemented
     
     def __truediv__(self, other):

@@ -39,7 +39,7 @@ class SE3(LieGroup.LieGroup):
     def inv(self):
         result = SE3()
         result._R = self._R.inv()
-        result._x = - self._R.inv() * self._x
+        result._x = - (self._R.inv() * self._x)
         return result
     
     def log(self):

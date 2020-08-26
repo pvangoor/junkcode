@@ -46,7 +46,7 @@ class SIM3(LieGroup.LieGroup):
     def inv(self):
         result = SIM3()
         result._R = self._R.inv()
-        result._x = - self._s.inv() * ( self._R.inv() * self._x )
+        result._x = - (self._s.inv() * ( self._R.inv() * self._x ))
         result._s = self._s.inv()
         return result
     
