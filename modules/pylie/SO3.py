@@ -7,6 +7,9 @@ class SO3(LieGroup.LieGroup):
     def __init__(self, R = Rotation.identity()):
         self._rot = R
     
+    def __str__(self):
+        return str(self._rot.as_matrix())
+    
     def Adjoint(self):
         return self._rot.as_matrix()
     
@@ -15,7 +18,7 @@ class SO3(LieGroup.LieGroup):
             result = SO3()
             result._rot = self._rot * other._rot
             return result
-        elif isinstance(other, np.ndarray) and other.shape == (3,1):
+        elif isinstance(other, np.ndarray) and other.shape[0] == 3:
             return self._rot.as_matrix() @ other
         elif isinstance(other, R3):
             result = R3()
@@ -55,13 +58,13 @@ class SO3(LieGroup.LieGroup):
         return result
 
     @staticmethod
-    def valid_list_formats() -> list:
+    def valid_list_formats() -> dict:
         # Possible formats are
         # R : 9 entry matrix (row-by-row)
         # q : 4 entry quaternion (scalar last)
         # w : 4 entry quaternion (scalar first)
         # r : 3 entry log vector
-        return ['R', 'q', 'w', 'r']
+        return {'R':9, 'q':4, 'w':4, 'r':3}
 
     @staticmethod
     def from_list(line, format_spec="q") -> 'SO3':

@@ -8,6 +8,9 @@ class R3(LieGroup.LieGroup):
     def __init__(self, x = np.zeros((3,1))):
         self._trans = x
     
+    def __str__(self):
+        return str(self._trans.ravel())
+    
     def Adjoint(self):
         return np.eye(3)
     
@@ -16,6 +19,11 @@ class R3(LieGroup.LieGroup):
             result = R3()
             result._trans = self._trans + other._trans
             return result
+        elif isinstance(other, np.ndarray):
+            if other.shape[0] == 3:
+                return other + self._trans
+            elif other.shape[0] == 4:
+                return self.as_matrix() @ other
         return NotImplemented
     
     def __add__(self, other):
@@ -29,11 +37,6 @@ class R3(LieGroup.LieGroup):
             result = R3()
             result._trans = self._trans - other._trans
             return result
-        elif isinstance(other, np.ndarray):
-            if other.shape == (3,1):
-                return self._trans + other
-            if other.shape == (4,1):
-                return self.as_matrix() @ other
         return NotImplemented
     
     def __sub__(self, other):
@@ -66,10 +69,10 @@ class R3(LieGroup.LieGroup):
         return result
 
     @staticmethod
-    def valid_list_formats() -> list:
+    def valid_list_formats() -> dict:
         # Possible formats are
         # x : 3 entry vector
-        return ['x']
+        return {'x':3}
 
     @staticmethod
     def from_list(line, format_spec="x") -> 'R3':

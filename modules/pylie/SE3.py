@@ -8,6 +8,9 @@ class SE3(LieGroup.LieGroup):
         self._R = R
         self._x = x
     
+    def __str__(self):
+        return str(self.as_matrix())
+    
     def Adjoint(self):
         return NotImplemented
     
@@ -18,9 +21,9 @@ class SE3(LieGroup.LieGroup):
             result._x = self._x + (self._R * other._x)
             return result
         if isinstance(other, np.ndarray):
-            if other.shape == (3,1):
+            if other.shape[0] == 3:
                 return self._x + (self._R * other)
-            elif other.shape == (4,1):
+            elif other.shape[0] == 4:
                 return self.as_matrix() @ other
         
         return NotImplemented
@@ -51,12 +54,15 @@ class SE3(LieGroup.LieGroup):
         return NotImplemented
 
     @staticmethod
-    def valid_list_formats():
+    def valid_list_formats() -> dict:
         # Possible formats are
         # q/w/R/r : SO(3) format specs
         # x : 3 entry translation
         # P : 12 entry homogeneous matrix (row-by-row)
-        return SO3.valid_list_formats() + R3.valid_list_formats() + ['P']
+        result = {'P':12}
+        result.update(SO3.valid_list_formats())
+        result.update(R3.valid_list_formats())
+        return result
 
     @staticmethod
     def from_list(line, format_spec="qx") -> 'SE3':
@@ -66,8 +72,10 @@ class SE3(LieGroup.LieGroup):
         for fspec in format_spec:
             if fspec in SO3_formats:
                 result._R = SO3.from_list(line)
+                line = line[SO3_formats[fspec]:]
             elif fspec in R3_formats:
                 result._x = R3.from_list(line)
+                line = line[R3_formats[fspec]:]
             elif fspec == "P":
                 mat = np.reshape(np.array([float(line[i]) for i in range(12)]), (3,4))
                 result._R._rot.from_matrix(mat[0:3,0:3])

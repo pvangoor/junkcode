@@ -58,10 +58,10 @@ class S1(LieGroup.LieGroup):
         return result
 
     @staticmethod
-    def valid_list_formats() -> list:
+    def valid_list_formats() -> dict:
         # Possible formats are
         # s : 1 entry scale
-        return ['s']
+        return {'s':1}
 
     @staticmethod
     def from_list(line, format_spec="s") -> 'S1':
