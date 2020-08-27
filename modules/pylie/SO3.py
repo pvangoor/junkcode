@@ -36,7 +36,7 @@ class SO3(LieGroup.LieGroup):
         return result
     
     def log(self):
-        return self._rot.as_rotvec
+        return np.reshape(self._rot.as_rotvec(), (3,1))
     
     def as_matrix(self):
         return self._rot.as_matrix()
@@ -51,7 +51,7 @@ class SO3(LieGroup.LieGroup):
     def exp(so3vec):
         assert so3vec.shape == (3,1), "Invalid shape of Lie algebra vector."
         result = SO3()
-        result._rot.from_rotvec(so3vec)
+        result._rot.from_rotvec(so3vec.ravel())
         return result
 
     @staticmethod
