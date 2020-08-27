@@ -7,6 +7,9 @@ class SO3(LieGroup.LieGroup):
     def __init__(self, R = Rotation.identity()):
         self._rot = R
     
+    def R(self):
+        return self._rot.as_matrix()
+
     def __str__(self):
         return str(self._rot.as_matrix())
     

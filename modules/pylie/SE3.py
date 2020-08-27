@@ -8,6 +8,12 @@ class SE3(LieGroup.LieGroup):
         self._R = R
         self._x = x
     
+    def R(self):
+        return self._R.R()
+    
+    def x(self):
+        return self._x.x()
+
     def __str__(self):
         return str(self.as_matrix())
     

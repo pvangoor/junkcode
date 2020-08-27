@@ -15,6 +15,15 @@ class SIM3(LieGroup.LieGroup):
         self._x = x
         self._s = s
 
+    def R(self):
+        return self._R.R()
+    
+    def x(self):
+        return self._x.x()
+
+    def s(self):
+        return self._s.s()
+
     def __str__(self):
         return str(self.as_matrix())
 

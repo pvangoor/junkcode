@@ -8,6 +8,9 @@ class S1(LieGroup.LieGroup):
     def __init__(self, s = 1.0):
         self._scale = 1.0
     
+    def s(self):
+        return self._scale
+    
     def Adjoint(self):
         return np.eye(1)
     
