@@ -11,6 +11,9 @@ class SE3(LieGroup.LieGroup):
     def R(self):
         return self._R.R()
     
+    def q(self):
+        return self._R.q()
+    
     def x(self):
         return self._x.x()
 

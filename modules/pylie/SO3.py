@@ -10,6 +10,9 @@ class SO3(LieGroup.LieGroup):
     def R(self):
         return self._rot.as_matrix()
 
+    def q(self):
+        return self._rot.as_quat()
+
     def __str__(self):
         return str(self._rot.as_matrix())
     
