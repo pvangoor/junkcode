@@ -55,9 +55,13 @@ def copy_template_lines(fname, start_row, indices):
             of.write(line)
         
         # Write the relevant indices
-        for i, line in enumerate(template_file):
-            if i in indices:
-                of.write(line)
+        line_ind = 0
+        line = next(template_file)
+        for ind in indices:
+            while line_ind < ind:
+                line_ind += 1
+                line = next(template_file)
+            of.write(line)
 
 
 
@@ -66,5 +70,6 @@ input_times = read_times(args.input, args.i_start, args.i_col)
 template_times = read_times(args.template, args.t_start, args.t_col)
 
 template_indices = find_nearest(input_times, template_times)
+print(len(template_indices))
 
 copy_template_lines(args.template, args.t_start, template_indices)
