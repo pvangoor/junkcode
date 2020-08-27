@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 '''
 Video and IMU to ROSbag Converter
 Usage: video_imu2rosbag.py -i <imu> -v <video> -t <time"
