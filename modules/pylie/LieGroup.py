@@ -35,17 +35,17 @@ class LieGroup(ABC):
         pass
 
     @staticmethod
-    def validFormats():
+    def valid_list_formats():
         return []
     
     @staticmethod
-    def read_from_csv(line, format_spec):
+    def from_list(line, format_spec):
         pass
     
     @abstractmethod
-    def write_to_csv(self, format_spec):
+    def to_list(self, format_spec):
         pass
 
     @staticmethod
-    def gen_csv_header(format_spec):
+    def list_header(format_spec):
         pass

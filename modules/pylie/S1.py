@@ -58,13 +58,13 @@ class S1(LieGroup.LieGroup):
         return result
 
     @staticmethod
-    def validFormats() -> list:
+    def valid_list_formats() -> list:
         # Possible formats are
         # s : 1 entry scale
         return ['s']
 
     @staticmethod
-    def read_from_csv(line, format_spec="s") -> 'S1':
+    def from_list(line, format_spec="s") -> 'S1':
         result = S1()
         if format_spec == "s":
             result._scale = float(line[0])
@@ -72,7 +72,7 @@ class S1(LieGroup.LieGroup):
             return NotImplemented
         return result
 
-    def write_to_csv(self, format_spec) -> list:
+    def to_list(self, format_spec) -> list:
         if format_spec == "s":
             result = [float(self._scale)]
         else:
@@ -80,7 +80,7 @@ class S1(LieGroup.LieGroup):
         return result
     
     @staticmethod
-    def gen_csv_header(format_spec):
+    def list_header(format_spec):
         if format_spec == "s":
             result = ["s"]
         else:

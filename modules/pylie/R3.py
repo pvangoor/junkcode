@@ -66,13 +66,13 @@ class R3(LieGroup.LieGroup):
         return result
 
     @staticmethod
-    def validFormats() -> list:
+    def valid_list_formats() -> list:
         # Possible formats are
         # x : 3 entry vector
         return ['x']
 
     @staticmethod
-    def read_from_csv(line, format_spec="x") -> 'R3':
+    def from_list(line, format_spec="x") -> 'R3':
         result = R3()
         if format_spec == "x":
             result._trans = np.reshape(np.array([float(line[i]) for i in range(3)]), (3,1))
@@ -81,7 +81,7 @@ class R3(LieGroup.LieGroup):
             return NotImplemented
         return result
 
-    def write_to_csv(self, format_spec) -> list:
+    def to_list(self, format_spec) -> list:
         if format_spec == "x":
             result = self._trans.ravel().tolist()
         else:
@@ -89,7 +89,7 @@ class R3(LieGroup.LieGroup):
         return result
     
     @staticmethod
-    def gen_csv_header(format_spec):
+    def list_header(format_spec):
         if format_spec == "x":
             result = "x1,x2,x3".split()
         else:

@@ -51,23 +51,23 @@ class SE3(LieGroup.LieGroup):
         return NotImplemented
 
     @staticmethod
-    def validFormats():
+    def valid_list_formats():
         # Possible formats are
         # q/w/R/r : SO(3) format specs
         # x : 3 entry translation
         # P : 12 entry homogeneous matrix (row-by-row)
-        return SO3.validFormats() + R3.validFormats() + ['P']
+        return SO3.valid_list_formats() + R3.valid_list_formats() + ['P']
 
     @staticmethod
-    def read_from_csv(line, format_spec="qx") -> 'SE3':
+    def from_list(line, format_spec="qx") -> 'SE3':
         result = SE3()
-        SO3_formats = SO3.validFormats()
-        R3_formats = R3.validFormats()
+        SO3_formats = SO3.valid_list_formats()
+        R3_formats = R3.valid_list_formats()
         for fspec in format_spec:
             if fspec in SO3_formats:
-                result._R = SO3.read_from_csv(line)
+                result._R = SO3.from_list(line)
             elif fspec in R3_formats:
-                result._x = R3.read_from_csv(line)
+                result._x = R3.from_list(line)
             elif fspec == "P":
                 mat = np.reshape(np.array([float(line[i]) for i in range(12)]), (3,4))
                 result._R._rot.from_matrix(mat[0:3,0:3])
@@ -77,15 +77,15 @@ class SE3(LieGroup.LieGroup):
                 return NotImplemented
         return result
 
-    def write_to_csv(self, format_spec) -> list:
+    def to_list(self, format_spec) -> list:
         result = []
-        SO3_formats = SO3.validFormats()
-        R3_formats = R3.validFormats()
+        SO3_formats = SO3.valid_list_formats()
+        R3_formats = R3.valid_list_formats()
         for fspec in format_spec:
             if fspec in SO3_formats:
-                result += self._R.write_to_csv(fspec)
+                result += self._R.to_list(fspec)
             elif fspec in R3_formats:
-                result += self._x.write_to_csv(fspec)
+                result += self._x.to_list(fspec)
             elif fspec == "P":
                 posemat = np.hstack((self._R.as_matrix(), self._x))
                 result += posemat.ravel().tolist()
@@ -94,17 +94,17 @@ class SE3(LieGroup.LieGroup):
         return result
     
     @staticmethod
-    def gen_csv_header(format_spec) -> list:
+    def list_header(format_spec) -> list:
         result = []
-        SO3_formats = SO3.validFormats()
-        R3_formats = R3.validFormats()
+        SO3_formats = SO3.valid_list_formats()
+        R3_formats = R3.valid_list_formats()
         for fspec in format_spec:
             if fspec == "P":
                 result += "P11,P12,P13,P14,P21,P22,P23,P24,P31,P32,P33,P34".split()
             elif fspec in R3_formats:
-                result += R3.gen_csv_header(fspec)
+                result += R3.list_header(fspec)
             elif fspec in SO3_formats:
-                result += SO3.gen_csv_header(fspec)
+                result += SO3.list_header(fspec)
             else:
                 return NotImplemented
         return result

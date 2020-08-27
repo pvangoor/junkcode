@@ -55,7 +55,7 @@ class SO3(LieGroup.LieGroup):
         return result
 
     @staticmethod
-    def validFormats() -> list:
+    def valid_list_formats() -> list:
         # Possible formats are
         # R : 9 entry matrix (row-by-row)
         # q : 4 entry quaternion (scalar last)
@@ -64,7 +64,7 @@ class SO3(LieGroup.LieGroup):
         return ['R', 'q', 'w', 'r']
 
     @staticmethod
-    def read_from_csv(line, format_spec="q") -> 'SO3':
+    def from_list(line, format_spec="q") -> 'SO3':
         result = SO3()
         if format_spec == "R":
             mat = np.reshape(np.array([float(line[i]) for i in range(9)]), (3,3))
@@ -86,12 +86,7 @@ class SO3(LieGroup.LieGroup):
             return NotImplemented
         return result
 
-    def write_to_csv(self, format_spec) -> list:
-        # Possible formats are
-        # R : 9 entry matrix (row-by-row)
-        # q : 4 entry quaternion (scalar last)
-        # w : 4 entry quaternion (scalar first)
-        # r : 3 entry log vector
+    def to_list(self, format_spec) -> list:
         if format_spec == "R":
             mat = self._rot.as_matrix()
             result = mat.ravel().tolist()
@@ -110,12 +105,7 @@ class SO3(LieGroup.LieGroup):
         return result
     
     @staticmethod
-    def gen_csv_header(format_spec):
-        # Possible formats are
-        # R : 9 entry matrix (row-by-row)
-        # q : 4 entry quaternion (scalar last)
-        # w : 4 entry quaternion (scalar first)
-        # r : 3 entry log vector
+    def list_header(format_spec):
         if format_spec == "R":
             result = "R11,R12,R13,R21,R22,R23,R31,R32,R33".split()
         elif format_spec == "q":

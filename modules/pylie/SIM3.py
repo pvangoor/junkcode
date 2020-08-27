@@ -59,59 +59,59 @@ class SIM3(LieGroup.LieGroup):
         return NotImplemented
 
     @staticmethod
-    def validFormats():
+    def valid_list_formats():
         # Possible formats are
         # SO(3) format specs
         # R(3) format specs
         # S(1) format specs
-        return SO3.validFormats() + R3.validFormats() + S1.validFormats() + ['S']
+        return SO3.valid_list_formats() + R3.valid_list_formats() + S1.valid_list_formats() + ['S']
 
     @staticmethod
-    def read_from_csv(line, format_spec="sqx") -> 'SE3':
+    def from_list(line, format_spec="sqx") -> 'SE3':
         result = SE3()
-        SO3_formats = SO3.validFormats()
-        R3_formats = R3.validFormats()
-        S1_formats = S1.validFormats()
+        SO3_formats = SO3.valid_list_formats()
+        R3_formats = R3.valid_list_formats()
+        S1_formats = S1.valid_list_formats()
         for fspec in format_spec:
             if fspec in SO3_formats:
-                result._R = SO3.read_from_csv(line)
+                result._R = SO3.from_list(line)
             elif fspec in R3_formats:
-                result._x = R3.read_from_csv(line)
+                result._x = R3.from_list(line)
             elif fspec in S1_formats:
-                result._s = S1.read_from_csv(line)
+                result._s = S1.from_list(line)
             else:
                 return NotImplemented
         return result
 
-    def write_to_csv(self, format_spec) -> list:
+    def to_list(self, format_spec) -> list:
         result = []
-        SO3_formats = SO3.validFormats()
-        R3_formats = R3.validFormats()
-        S1_formats = S1.validFormats()
+        SO3_formats = SO3.valid_list_formats()
+        R3_formats = R3.valid_list_formats()
+        S1_formats = S1.valid_list_formats()
         for fspec in format_spec:
             if fspec in SO3_formats:
-                result += self._R.write_to_csv(fspec)
+                result += self._R.to_list(fspec)
             elif fspec in R3_formats:
-                result += self._x.write_to_csv(fspec)
+                result += self._x.to_list(fspec)
             elif fspec in S1_formats:
-                result += self._s.write_to_csv(fspec)
+                result += self._s.to_list(fspec)
             else:
                 return NotImplemented
         return result
     
     @staticmethod
-    def gen_csv_header(format_spec) -> list:
+    def list_header(format_spec) -> list:
         result = []
-        SO3_formats = SO3.validFormats()
-        R3_formats = R3.validFormats()
-        S1_formats = S1.validFormats()
+        SO3_formats = SO3.valid_list_formats()
+        R3_formats = R3.valid_list_formats()
+        S1_formats = S1.valid_list_formats()
         for fspec in format_spec:
             if fspec in R3_formats:
-                result += R3.gen_csv_header(fspec)
+                result += R3.list_header(fspec)
             elif fspec in SO3_formats:
-                result += SO3.gen_csv_header(fspec)
+                result += SO3.list_header(fspec)
             elif fspec in S1_formats:
-                result += S1.gen_csv_header(fspec)
+                result += S1.list_header(fspec)
             else:
                 return NotImplemented
         return result
