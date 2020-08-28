@@ -4,7 +4,7 @@ from R3 import R3 as R3
 import numpy as np
 
 class SE3(LieGroup.LieGroup):
-    def __init__(self, R = SO3(), x = R3):
+    def __init__(self, R = SO3(), x = R3()):
         self._R = R
         self._x = x
     
@@ -87,7 +87,7 @@ class SE3(LieGroup.LieGroup):
                 line = line[R3_formats[fspec]:]
             elif fspec == "P":
                 mat = np.reshape(np.array([float(line[i]) for i in range(12)]), (3,4))
-                result._R._rot.from_matrix(mat[0:3,0:3])
+                result._R._rot = result._R._rot.from_matrix(mat[0:3,0:3])
                 result._x._trans = mat[0:3,3:4]
                 line = line[12:]
             else:
