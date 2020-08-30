@@ -5,10 +5,10 @@ import argparse
 parser = argparse.ArgumentParser(description="Finds the closest timestamp in the template csv to the input csv and stores the corresponding row in a new file.")
 parser.add_argument("template", metavar='t', type=str, help="The template csv file to get data from.")
 parser.add_argument("input", metavar='i', type=str, help="The input csv file to match timestamps from.")
-parser.add_argument("--t_start", type=int, default=1, help="The row where the template data starts.")
-parser.add_argument("--i_start", type=int, default=1, help="The row where the input data starts.")
-parser.add_argument("--t_col", type=int, default=0, help="The column where the template timestamps are stored.")
-parser.add_argument("--i_col", type=int, default=0, help="The column where the input timestamps are stored.")
+parser.add_argument("--t_start", type=int, default=1, help="The row where the template data starts. Default 1.")
+parser.add_argument("--i_start", type=int, default=1, help="The row where the input data starts. Default 1.")
+parser.add_argument("--t_col", type=int, default=0, help="The column where the template timestamps are stored. Default 0.")
+parser.add_argument("--i_col", type=int, default=0, help="The column where the input timestamps are stored. Default 0.")
 
 args = parser.parse_args()
 
