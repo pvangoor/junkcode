@@ -13,3 +13,4 @@ pdfs/*
 .vscode/.ropeproject/*
 makeDepthMaps/*/*.png
 makeDepthMaps/.vscode/settings.json
+makeDepthMaps/*/*.pfm

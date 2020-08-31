@@ -4,7 +4,7 @@
 
 #include "eigen3/Eigen/Dense"
 #include "opencv2/core/core.hpp"
-#include "opencv2/imgproc.hpp"
+// #include "opencv2/imgproc.hpp"
 #include "opencv2/calib3d.hpp"
 #include <iomanip> 
 #include <execution>
@@ -15,32 +15,22 @@
 #define CONFIG_FILE "unknown"
 #endif
 
+#define TEST_IMAGES true
+
 using namespace std;
 using namespace Eigen;
 using namespace cv;
 
-// typedef double float;
-// typedef Matrix3d Matrix3f;
-// typedef Vector3d Vector3f;
-// typedef MatrixXd MatrixXf;
-// typedef Quaterniond Quaternionf;
-// #define stof stod
-
-// typedef float float;
-// typedef Matrix3f Matrix3f;
-// typedef Vector3f Vector3f;
-// typedef MatrixXf MatrixXf;
-// typedef Quaternionf Quaternionf;
-
-static constexpr int skipPixelsExponent = 4;
+static constexpr int skipPixelsExponent = 0;
 static constexpr int skipPixels = (int) pow(2, skipPixelsExponent);
 static constexpr int resx = 752 / skipPixels;
 static constexpr int resy = 480 / skipPixels;
 static constexpr float rayEps = 0.01;
 static constexpr float rayErrorLimit = 1.0 - rayEps*rayEps;
 
-static const int counterStart = 160;
-static const int counterEnd = 180;
+static const int counterStart = 0;
+static const int counterStep = 10;
+static const int counterEnd = 300;
 
 struct Pose {
     Matrix3f R;
@@ -87,7 +77,7 @@ int main(int argc, char const *argv[])
 
     for (const Pose& camPose : camPoses) {
         if (counter < counterStart) {
-            ++counter;
+            counter += counterStep;
             continue;
         } else if (counter >= counterEnd) {
             break;
@@ -120,7 +110,7 @@ int main(int argc, char const *argv[])
 
         // cout << "Length of depth array: " << depthArray.size() << endl;
         // cout << "Depth array entries: \n";
-        for (const auto& d : depthArray) // cout << d << ", ";
+        // for (const auto& d : depthArray) cout << d << ", ";
         // cout << endl;
 
         if(depthArray.size() == resx*resy) // check that the rows and cols match the size of your vector
@@ -133,19 +123,26 @@ int main(int argc, char const *argv[])
                 m.at<float>(r,c) = depthArray[r+c*resy];
             }   
             }
-            normalize(m, m, 0, 255, NORM_MINMAX);
-            m.convertTo(m, CV_8UC1);
-            
-            resize(m,m, Size(0,0), skipPixels, skipPixels);
-            // imshow("test", m);
-            // waitKey(0);
-            stringstream output_fname;
-            output_fname << "depths/depth_" << counter << ".png";
-            imwrite(output_fname.str(), m);
+
+            // Write UC8 images for testing
+            if (TEST_IMAGES) {
+                normalize(m, m, 0, 255, NORM_MINMAX);
+                m.convertTo(m, CV_8UC1);
+                stringstream output_fname;
+                output_fname << "depths/depth_" << counter << ".png";
+                // imshow("test", m);
+                // waitKey(0);
+                imwrite(output_fname.str(), m);
+            } else {
+                // Write pfm for real output
+                stringstream output_fname;
+                output_fname << "depths/depth_" << counter << ".pfm";
+                imwrite(output_fname.str(), m);
+            }
         }
 
         // string = "image"+to_string(counter)+".pfm";
-        ++counter;
+        counter += counterStep;
     }
 
 
@@ -224,10 +221,10 @@ vector<Vector3f> filterCloud(const Matrix<float,3,Dynamic>& cloud, const vector<
     vector<Vector3f> goodCloudVec;
     for (int i=0; i<cloud.cols();++i) {
         if (
-            (cloud(0,i) >= (minx-rayEps)*cloud(2,i)) &&
-            (cloud(0,i) <= (maxx+rayEps)*cloud(2,i)) &&
-            (cloud(1,i) >= (miny-rayEps)*cloud(2,i)) &&
-            (cloud(1,i) <= (maxy+rayEps)*cloud(2,i)) &&
+            (cloud(0,i) >= (minx-30*rayEps)*cloud(2,i)) &&
+            (cloud(0,i) <= (maxx+30*rayEps)*cloud(2,i)) &&
+            (cloud(1,i) >= (miny-30*rayEps)*cloud(2,i)) &&
+            (cloud(1,i) <= (maxy+30*rayEps)*cloud(2,i)) &&
             (cloud(2,i) > 0)
         ) {
             goodCloudVec.emplace_back(cloud.block<3,1>(0,i));
@@ -256,10 +253,12 @@ vector<Vector3f> makeCameraRays() {
 
     float distData[4] = {-0.28340811, 0.07395907, 0.00019359, 1.76187114e-05};
     const Mat dist = Mat(1,4, CV_32FC1, distData);
+    const Mat nodist = Mat(1,4, CV_32FC1, {0,0,0,0});
 
     // undistort the rays
     vector<Point2f> normalRaysCV;
-    undistortPoints(pixelRays, normalRaysCV, K, dist);
+    // undistortPoints(pixelRays, normalRaysCV, K, dist);
+    undistortPoints(pixelRays, normalRaysCV, K, nodist);
 
     // Turn into eigen
     auto rayLambda = [](const Point2f& nray) {
