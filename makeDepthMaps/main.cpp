@@ -3,7 +3,6 @@
 #include <fstream>
 
 #include "eigen3/Eigen/Dense"
-// #include "opencv4/opencv2/imgproc.hpp"
 #include "opencv2/core/core.hpp"
 #include "opencv2/imgproc.hpp"
 #include "opencv2/calib3d.hpp"
@@ -11,6 +10,10 @@
 #include <execution>
 
 #include "opencv2/highgui.hpp"
+
+#ifndef CONFIG_FILE
+#define CONFIG_FILE "unknown"
+#endif
 
 using namespace std;
 using namespace Eigen;
@@ -29,15 +32,15 @@ using namespace cv;
 // typedef MatrixXf MatrixXf;
 // typedef Quaternionf Quaternionf;
 
-static constexpr int skipPixelsExponent = 2;
+static constexpr int skipPixelsExponent = 4;
 static constexpr int skipPixels = (int) pow(2, skipPixelsExponent);
 static constexpr int resx = 752 / skipPixels;
 static constexpr int resy = 480 / skipPixels;
 static constexpr float rayEps = 0.01;
 static constexpr float rayErrorLimit = 1.0 - rayEps*rayEps;
 
-static const int counterStart = 67;
-static const int counterEnd = 500;
+static const int counterStart = 160;
+static const int counterEnd = 180;
 
 struct Pose {
     Matrix3f R;
@@ -59,13 +62,17 @@ vector<Vector3f> makeCameraRays();
 vector<float> makeDepthArray(const vector<Vector3f>& camRays, const vector<Vector3f>& goodCloudVec);
 vector<Pose> readCameraPoses(const string& fname);
 vector<Vector3f> filterCloud(const Matrix<float,3,Dynamic>& cloud, const vector<Vector3f>& camRays);
-vector<long long> readStamps(const string& fname);
 
 int main(int argc, char const *argv[])
 {
     // cout << "Skipping this many pixels: " << skipPixels << endl;
+    cout << "Reading the config file: " << CONFIG_FILE << endl;
 
-    string cloudFname = "../mav0/pointcloud0/data.ply";
+    string cloudFname, camFname;
+    ifstream configFile(CONFIG_FILE);
+    getline(configFile, cloudFname);
+    getline(configFile, camFname);
+
     cout << "Reading pointcloud" << endl;
     Matrix<float, 3, Dynamic> pcl = readPointCloud(cloudFname);
 
@@ -73,35 +80,24 @@ int main(int argc, char const *argv[])
     vector<Vector3f> camRays = makeCameraRays();
 
     cout << "Reading the camera poses" << endl;
-    string camFname = "../cam0Poses.csv";
     vector<Pose> camPoses = readCameraPoses(camFname);
     sort(camPoses.begin(), camPoses.end());
 
-    // Get the closes pose to the given time
-    // vector<float> stamps = {1.40371529511214E+018};
-    string stampsFname = "../mav0/cam0/data.csv";
-    vector<long long> stamps = readStamps(stampsFname);
-
     int counter = 0;
 
-    for (const long long& stamp : stamps) {
+    for (const Pose& camPose : camPoses) {
         if (counter < counterStart) {
             ++counter;
             continue;
         } else if (counter >= counterEnd) {
             break;
         }
-        
-        const Pose& camPose = *lower_bound(camPoses.begin(), camPoses.end(), stamp);
 
-        // cout << "Camera Position" << endl;
-        // cout << camPose.x << endl;
+        cout << "Camera Position" << endl;
+        cout << camPose.x << endl;
         
         // cout << "Camera time" << endl;
         // cout << setprecision(50) << camPose.t << endl;
-
-        // cout << "Stamp" << endl;
-        // cout << stamp << endl;
         
 
         cout << "Processing Image " << counter << endl;
@@ -333,30 +329,4 @@ vector<Pose> readCameraPoses(const string& fname) {
     // // cout << result.block<3,10>(0,0) << endl;
     poseFile.close();
     return poses;
-}
-
-vector<long long> readStamps(const string& fname) {
-    const int numStamps = countLines(fname);
-    vector<long long> stamps;
-
-    // Read the input file
-    ifstream stampFile = ifstream(fname);
-    int counter = 0;
-    string line;
-    while (getline(stampFile, line)) {
-        ++counter;
-        if (counter < 2) continue; // Skip the header
-        
-        istringstream iss(line);
-        string entry;
-        
-        getline(iss, entry, ','); // Read just the first entry on the line
-        stamps.emplace_back(stoll(entry));
-
-        // cout << "Stamp " << stamps[counter-2] << endl;
-    }
-
-    // // cout << result.block<3,10>(0,0) << endl;
-    stampFile.close();
-    return stamps;
 }

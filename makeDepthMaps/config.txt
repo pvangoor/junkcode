@@ -1,0 +1,2 @@
+/home/pieter/Datasets/EuRoC/V1_01_easy/mav0/pointcloud0/data.ply
+/home/pieter/Datasets/EuRoC/V1_01_easy/mav0/state_groundtruth_estimate0/data_matched_offset.csv

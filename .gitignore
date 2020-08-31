@@ -11,3 +11,4 @@ pdfs/*
 
 *pdf_*.py
 .vscode/.ropeproject/*
+makeDepthMaps/*/*.png
