@@ -15,7 +15,7 @@
 #define CONFIG_FILE "unknown"
 #endif
 
-#define TEST_IMAGES true
+#define TEST_IMAGES false
 
 using namespace std;
 using namespace Eigen;
@@ -29,8 +29,8 @@ static constexpr float rayEps = 0.01;
 static constexpr float rayErrorLimit = 1.0 - rayEps*rayEps;
 
 static const int counterStart = 0;
-static const int counterStep = 10;
-static const int counterEnd = 300;
+static const int counterStep = 1; // TODO
+static const int counterEnd = 3000;
 
 struct Pose {
     Matrix3f R;
