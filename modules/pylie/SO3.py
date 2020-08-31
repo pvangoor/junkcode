@@ -7,10 +7,10 @@ class SO3(LieGroup.LieGroup):
     def __init__(self, R = Rotation.identity()):
         self._rot = R
     
-    def R(self):
+    def R(self) -> np.ndarray:
         return self._rot.as_matrix()
 
-    def q(self):
+    def q(self) -> np.ndarray:
         return self._rot.as_quat()
 
     def __str__(self):
@@ -86,6 +86,7 @@ class SO3(LieGroup.LieGroup):
         elif format_spec == "w":
             quat = np.array([float(line[i]) for i in [1,2,3,0]])
             result._rot = Rotation.from_quat(quat)
+            print(line)
             line = line[4:]
         elif format_spec == "r":
             rotvec = np.array([float(line[i]) for i in range(3)])

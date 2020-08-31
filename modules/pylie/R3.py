@@ -8,7 +8,7 @@ class R3(LieGroup.LieGroup):
     def __init__(self, x = np.zeros((3,1))):
         self._trans = x
     
-    def x(self):
+    def x(self) -> np.ndarray:
         return self._trans
     
     def __str__(self):

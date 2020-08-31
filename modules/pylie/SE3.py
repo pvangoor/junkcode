@@ -8,13 +8,13 @@ class SE3(LieGroup.LieGroup):
         self._R = R
         self._x = x
     
-    def R(self):
+    def R(self) -> np.ndarray:
         return self._R.R()
     
-    def q(self):
+    def q(self) -> np.ndarray:
         return self._R.q()
     
-    def x(self):
+    def x(self) -> np.ndarray:
         return self._x.x()
 
     def __str__(self):
@@ -80,10 +80,10 @@ class SE3(LieGroup.LieGroup):
         R3_formats = R3.valid_list_formats()
         for fspec in format_spec:
             if fspec in SO3_formats:
-                result._R = SO3.from_list(line)
+                result._R = SO3.from_list(line, fspec)
                 line = line[SO3_formats[fspec]:]
             elif fspec in R3_formats:
-                result._x = R3.from_list(line)
+                result._x = R3.from_list(line, fspec)
                 line = line[R3_formats[fspec]:]
             elif fspec == "P":
                 mat = np.reshape(np.array([float(line[i]) for i in range(12)]), (3,4))

@@ -106,11 +106,11 @@ class SIM3(LieGroup.LieGroup):
         S1_formats = S1.valid_list_formats()
         for fspec in format_spec:
             if fspec in SO3_formats:
-                result._R = SO3.from_list(line)
+                result._R = SO3.from_list(line, fspec)
             elif fspec in R3_formats:
-                result._x = R3.from_list(line)
+                result._x = R3.from_list(line, fspec)
             elif fspec in S1_formats:
-                result._s = S1.from_list(line)
+                result._s = S1.from_list(line, fspec)
             else:
                 return NotImplemented
         return result
