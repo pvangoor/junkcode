@@ -86,7 +86,6 @@ class SO3(LieGroup.LieGroup):
         elif format_spec == "w":
             quat = np.array([float(line[i]) for i in [1,2,3,0]])
             result._rot = Rotation.from_quat(quat)
-            print(line)
             line = line[4:]
         elif format_spec == "r":
             rotvec = np.array([float(line[i]) for i in range(3)])
