@@ -1,3 +1,4 @@
+from LieGroup import LieGroup as LieGroup
 from SO3 import SO3 as SO3
 from SE3 import SE3 as SE3
 from SIM3 import SIM3 as SIM3
