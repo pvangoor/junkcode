@@ -12,3 +12,4 @@ pdfs/*
 *pdf_*.py
 .vscode/.ropeproject/*
 makeDepthMaps/*/*.png
+makeDepthMaps/.vscode/settings.json
