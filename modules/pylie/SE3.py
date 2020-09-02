@@ -107,6 +107,17 @@ class SE3(LieGroup.LieGroup):
         result = SE3.from_matrix(mat)
 
         return result
+    
+    def log(self) -> np.ndarray:
+        w = self._R.log()
+        theta = np.linalg.norm(w)
+        wx = SO3.skew(w)
+        if theta > 1e-6:
+            Vinv = np.eye(3) - 0.5 * wx + theta**(-2.0) * (1.0 - (theta*np.sin(theta))/(2*(1-np.cos(theta)))) * wx @ wx
+        else:
+            Vinv = np.eye(3) - 0.5*wx
+        u = Vinv @ self._x._trans
+        return np.vstack((w,u))
 
     @staticmethod
     def valid_list_formats() -> dict:
