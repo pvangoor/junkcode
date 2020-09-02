@@ -37,6 +37,13 @@ class SE3(LieGroup.LieGroup):
         
         return NotImplemented
     
+    @staticmethod
+    def identity():
+        result = SE3()
+        result._R = SO3.identity()
+        result._x = R3.identity()
+        return result
+    
     def as_matrix(self):
         mat = np.eye(4)
         mat[0:3,0:3] = self._R.as_matrix()
