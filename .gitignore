@@ -14,3 +14,4 @@ pdfs/*
 makeDepthMaps/*/*.png
 makeDepthMaps/.vscode/settings.json
 makeDepthMaps/*/*.pfm
+practice/cmake/build/*
