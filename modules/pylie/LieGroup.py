@@ -6,6 +6,13 @@ class LieGroup(ABC):
     def __mul__(self, other):
         pass
     
+    def __matmul__(self, other):
+        if isinstance(other, LieGroup):
+            return self.as_matrix() @ other.as_matrix()
+        elif isinstance(other, np.ndarray):
+            return self.as_matrix() @ other
+        return NotImplemented
+    
     @abstractmethod
     def inv(self):
         pass
