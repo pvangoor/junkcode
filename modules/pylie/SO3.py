@@ -127,5 +127,35 @@ class SO3(LieGroup.LieGroup):
             return NotImplemented
         return result
 
+    @staticmethod
+    def vee(mat : np.ndarray) -> np.ndarray:
+        if not isinstance(mat, np.ndarray):
+            raise TypeError
+        if not mat.shape == (3,3):
+            raise ValueError
+        vec = np.array([[mat[2,1]],
+                        [mat[0,2]],
+                        [mat[1,0]]])
+        return vec
+    
+    @staticmethod
+    def vex(mat : np.ndarray) -> np.ndarray:
+        return SO3.vee(mat)
+
+    @staticmethod
+    def wedge(vec : np.ndarray) -> np.ndarray:
+        if not isinstance(vec, np.ndarray):
+            raise TypeError
+        if not vec.shape == (3,1):
+            raise ValueError
+        mat = np.array([[      0.0, -vec[2,0],  vec[1,0]],
+                        [ vec[2,0],       0.0, -vec[0,0]],
+                        [-vec[1,0],  vec[0,0],       0.0]])
+        return mat
+    
+    @staticmethod
+    def skew(vec : np.ndarray) -> np.ndarray:
+        return SO3.wedge(vec)
+
 if __name__ == "__main__":
     R = SO3()

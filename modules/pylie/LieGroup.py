@@ -49,3 +49,11 @@ class LieGroup(ABC):
     @staticmethod
     def list_header(format_spec):
         pass
+
+    @staticmethod
+    def vee(mat : np.ndarray) -> np.ndarray:
+        pass
+
+    @staticmethod
+    def wedge(mat : np.ndarray) -> np.ndarray:
+        pass
