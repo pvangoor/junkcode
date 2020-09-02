@@ -49,6 +49,17 @@ class SO3(LieGroup.LieGroup):
     
     def as_matrix(self):
         return self._rot.as_matrix()
+
+    @staticmethod
+    def from_matrix(mat : np.ndarray) -> 'SO3':
+        if not isinstance(mat, np.ndarray):
+            raise TypeError
+        if not mat.shape == (3,3):
+            raise ValueError
+        
+        result = SO3()
+        result._rot = Rotation.from_matrix(mat)
+        return result
     
     @staticmethod
     def identity():

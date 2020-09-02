@@ -42,6 +42,18 @@ class SE3(LieGroup.LieGroup):
         mat[0:3,0:3] = self._R.as_matrix()
         mat[0:3,3:4] = self._x._trans
         return mat
+
+    @staticmethod
+    def from_matrix(mat : np.ndarray) -> 'SE3':
+        if not isinstance(mat, np.ndarray):
+            raise TypeError
+        if not mat.shape == (4,4):
+            raise ValueError
+        
+        result = SE3()
+        result._R = SO3.from_matrix(mat[0:3,0:3])
+        result._x._trans = mat[0:3,3:4]
+        return result
     
     def __truediv__(self, other):
         if isinstance(other, SE3):
@@ -58,9 +70,36 @@ class SE3(LieGroup.LieGroup):
         return NotImplemented
     
     @staticmethod
-    def exp(se3vec):
-        assert se3vec.shape == (6,1), "Invalid shape of Lie algebra vector."
-        return NotImplemented
+    def exp(se3arr):
+        if not isinstance(se3arr, np.ndarray):
+            raise TypeError
+        if se3arr.shape == (4,4):
+            se3arr = SE3.vee(se3arr)
+        elif not se3arr.shape == (6,1):
+            raise ValueError
+
+        w = se3arr[0:3,0:1]
+        u = se3arr[3:6,0:1]
+        theta = np.linalg.norm(w)
+
+        if theta > 1e-6:
+            A = np.sin(theta) / theta
+            B = (1.0 - np.cos(theta)) / theta**2.0
+            C = (1.0 - A) / theta**2.0
+        else:
+            A = 1.0
+            B = 1.0 / 6.0
+            C = 0.0
+        
+        wx = SO3.skew(w)
+        wx2 = wx @ wx
+        R = np.eye(3) + A * wx + B * wx2
+        V = np.eye(3) + B * wx + C * wx2
+
+        mat = np.block([[R, V@u],[np.zeros((1,4))]])
+        result = SE3.from_matrix(mat)
+
+        return result
 
     @staticmethod
     def valid_list_formats() -> dict:
@@ -125,6 +164,28 @@ class SE3(LieGroup.LieGroup):
             else:
                 return NotImplemented
         return result
+
+    @staticmethod
+    def vee(mat : np.ndarray) -> np.ndarray:
+        if not isinstance(mat, np.ndarray):
+            raise TypeError
+        if not mat.shape == (4,4):
+            raise ValueError
+        vecOmega = SO3.vex(mat[0:3,0:3])
+        vecV = mat[0:3,3:4]
+        vec = np.vstack((vecOmega, vecV))
+        return vec
+
+    @staticmethod
+    def wedge(vec : np.ndarray) -> np.ndarray:
+        if not isinstance(vec, np.ndarray):
+            raise TypeError
+        if not vec.shape == (6,1):
+            raise ValueError
+        mat = np.zeros((4,4))
+        mat[0:3,0:3] = SO3.skew(vec[0:3,0:1])
+        mat[0:3,3:4] = vec[3:6, 0:1]
+        return mat
 
 if __name__ == "__main__":
     P = SE3()
