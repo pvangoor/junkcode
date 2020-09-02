@@ -88,8 +88,8 @@ class SE3(LieGroup.LieGroup):
             C = (1.0 - A) / theta**2.0
         else:
             A = 1.0
-            B = 1.0 / 6.0
-            C = 0.0
+            B = 1.0 / 2.0
+            C = 1.0 / 6.0
         
         wx = SO3.skew(w)
         wx2 = wx @ wx
