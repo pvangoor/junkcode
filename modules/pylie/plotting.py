@@ -8,7 +8,7 @@ except ImportError as error:
 from pylie import SO3, SE3, SIM3, LieGroup
 import numpy as np
 
-def plotFrame(frame : LieGroup, ax : Axes3D = None):
+def plotFrame(frame : LieGroup, style='-', ax : Axes3D = None):
     if not isinstance(frame, (SIM3, SE3, SO3)):
         raise TypeError("The frame must be of one of the types: SIM3, SE3, SO3.")
     if ax is None:
@@ -32,6 +32,7 @@ def plotFrame(frame : LieGroup, ax : Axes3D = None):
 
     # result = ax.plot(frame_axes[0], frame_axes[1], frame_axes[2])
     colors = ['r','g','b']
+    colors = [c+style for c in colors]
     result = []
     for a in range(3):
         temp = ax.plot([t[0,0], t[0,0]+Q[0,a]], [t[1,0], t[1,0]+Q[1,a]], [t[2,0], t[2,0]+Q[2,a]], colors[a])
