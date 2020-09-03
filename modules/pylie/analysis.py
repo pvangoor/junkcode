@@ -5,6 +5,10 @@ def umeyama(points1 : np.ndarray, points2 : np.ndarray) -> SIM3:
     # This function solves the least squares problem of finding a SIM3 transform S such that
     # S * points1 = points2,
     # s_S * R_S * points1_i + x_S = points2_i
+    if isinstance(points1, list):
+        points1 = np.hstack(points1)
+    if isinstance(points2, list):
+        points2 = np.hstack(points2)
     assert isinstance(points1, np.ndarray) and isinstance(points2, np.ndarray), "The points must be in numpy arrays."
     assert points1.shape == points2.shape, "The points are not matched."
     assert points1.shape[0] == 3, "The points are not 3D."

@@ -77,9 +77,6 @@ class SE3(LieGroup.LieGroup):
         result._x = - (self._R.inv() * self._x)
         return result
     
-    def log(self):
-        return NotImplemented
-    
     @staticmethod
     def exp(se3arr):
         if not isinstance(se3arr, np.ndarray):
