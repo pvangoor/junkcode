@@ -37,7 +37,7 @@ with open(args.file, 'r') as f:
         ax.cla()
 
         ax.plot(trail[0,:], trail[1,:], trail[2,:], "m")
-        plotting.plotFrame(pose, ax)
+        plotting.plotFrame(pose, '-', ax)
         ax.set_xlabel("x")
         ax.set_ylabel("y")
         ax.set_zlabel("z")

@@ -4,7 +4,11 @@ from R3 import R3 as R3
 import numpy as np
 
 class SE3(LieGroup.LieGroup):
-    def __init__(self, R = SO3(), x = R3()):
+    def __init__(self, R = None, x = None):
+        if R is None:
+            R = SO3()
+        if x is None:
+            x = R3()
         self._R = R
         self._x = x
     
@@ -161,7 +165,7 @@ class SE3(LieGroup.LieGroup):
             elif fspec in R3_formats:
                 result += self._x.to_list(fspec)
             elif fspec == "P":
-                posemat = np.hstack((self._R.as_matrix(), self._x))
+                posemat = np.hstack((self.R(), self.x()))
                 result += posemat.ravel().tolist()
             else:
                 return NotImplemented
