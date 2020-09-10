@@ -12,6 +12,7 @@ parser.add_argument("file", metavar='f', type=str, help="Name fo the file with t
 parser.add_argument("--fspec", type=str, default='xw', help="Format of the poses in the file. Default xw.")
 parser.add_argument("--scol", type=int, default=1, help="The column where the poses start. Default 1.")
 parser.add_argument("--srow", type=int, default=1, help="The row where the poses start. Default 1.")
+parser.add_argument("--delim", type=str, default=",", help="The delimiter. Default \",\".")
 
 args = parser.parse_args()
 
@@ -21,7 +22,7 @@ ax = fig.add_subplot(111, projection='3d')
 
 
 with open(args.file, 'r') as f:
-    reader = csv.reader(f)
+    reader = csv.reader(f, delimiter=args.delim)
 
     # Ignore the header
     for _ in range(args.srow):
