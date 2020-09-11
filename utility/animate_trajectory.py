@@ -31,7 +31,7 @@ with open(args.file, 'r') as f:
 
     # Read the poses and animate trajectory
     trail = np.zeros((3,0))
-    counter = 0
+    counter = -1
     for line in reader:
 
         counter += 1
