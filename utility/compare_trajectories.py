@@ -9,9 +9,9 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 parser = argparse.ArgumentParser(description="Compare estimated and groundtruth trajectories.")
-parser.add_argument("est_poses", metavar='f', type=str, help="The file containing estimated poses.")
+parser.add_argument("est_poses", metavar='e', type=str, help="The file containing estimated poses.")
 parser.add_argument("gt_poses", metavar='g', type=str, help="The file containing groundtruth poses.")
-parser.add_argument("--fformat", type=str, default="xq", help="The format of est poses. Default xq")
+parser.add_argument("--eformat", type=str, default="xq", help="The format of estimated poses. Default xq")
 parser.add_argument("--gformat", type=str, default="xw", help="The format of groundtruth poses. Default xw")
 parser.add_argument("--num_frames", type=int, default=100, help="The number of frames used to match poses. Use -1 for full alignment. Default 100.")
 
@@ -71,24 +71,24 @@ if args.num_frames >= 0:
 else:
     frame_change_n_times = len(etimes)
     print("Using all positions to align the trajectories.")
-f_positions = np.hstack([pose._x._trans for pose in eposes])
+e_positions = np.hstack([pose._x._trans for pose in eposes])
 g_positions = np.hstack([pose._x._trans for pose in gposes])
-frame_change = analysis.umeyama(f_positions[:,:frame_change_n_times], g_positions[:,:frame_change_n_times])
+frame_change = analysis.umeyama(e_positions[:,:frame_change_n_times], g_positions[:,:frame_change_n_times])
 frame_change = frame_change.to_SE3().inv()
 aposes = [(frame_change * pose) for pose in gposes]
 
 n_poses = len(eposes)
 rel_eposes = [eposes[i].inv() * eposes[i+1] for i in range(n_poses-1)]
 rel_aposes = [aposes[i].inv() * aposes[i+1] for i in range(n_poses-1)]
-rel_ftrans = np.hstack([rel_pose._x._trans for rel_pose in rel_eposes])
+rel_etrans = np.hstack([rel_pose._x._trans for rel_pose in rel_eposes])
 rel_gtrans = np.hstack([rel_pose._x._trans for rel_pose in rel_aposes])
 
-rel_frot = np.hstack([rel_pose._R.log() for rel_pose in rel_eposes])
+rel_erot = np.hstack([rel_pose._R.log() for rel_pose in rel_eposes])
 rel_grot = np.hstack([rel_pose._R.log() for rel_pose in rel_aposes])
 
-frot_eul = np.hstack([np.reshape(pose._R._rot.as_euler('xyz'), (3,1)) for pose in eposes])
+erot_eul = np.hstack([np.reshape(pose._R._rot.as_euler('xyz'), (3,1)) for pose in eposes])
 grot_eul = np.hstack([np.reshape(pose._R._rot.as_euler('xyz'), (3,1)) for pose in aposes])
-ftrans = np.hstack([np.reshape(pose._x._trans, (3,1)) for pose in eposes])
+etrans = np.hstack([np.reshape(pose._x._trans, (3,1)) for pose in eposes])
 gtrans = np.hstack([np.reshape(pose._x._trans, (3,1)) for pose in aposes])
 
 
@@ -96,7 +96,7 @@ gtrans = np.hstack([np.reshape(pose._x._trans, (3,1)) for pose in aposes])
 # Statistics are: mean, variance, median, min, max
 
 # Frame-to-frame errors are position change and attitude change
-relative_position_error = np.linalg.norm(rel_gtrans - rel_ftrans, axis=0)
+relative_position_error = np.linalg.norm(rel_gtrans - rel_etrans, axis=0)
 relative_position_error_stats = computeStatistics(relative_position_error)
 print()
 print("Relative position error (m) stats:")
@@ -109,7 +109,7 @@ print("Relative attitude error (deg) stats:")
 print(statString(relative_attitude_error_stats))
 
 # Global errors are position and attitude
-absolute_position_error = np.linalg.norm(gtrans - ftrans, axis=0)
+absolute_position_error = np.linalg.norm(gtrans - etrans, axis=0)
 absolute_position_error_stats = computeStatistics(absolute_position_error)
 print("Absolute position error (m) stats:")
 print(statString(absolute_position_error_stats))
@@ -125,17 +125,17 @@ print(statString(absolute_attitude_error_stats))
 # Plot the relative translation and rotation
 fig, ax = plt.subplots(3,2)
 ax[0,0].plot(etimes[:-1], rel_gtrans[0,:], 'r',
-             etimes[:-1], rel_ftrans[0,:], 'r--')
+             etimes[:-1], rel_etrans[0,:], 'r--')
 ax[1,0].plot(etimes[:-1], rel_gtrans[1,:], 'g',
-             etimes[:-1], rel_ftrans[1,:], 'g--')
+             etimes[:-1], rel_etrans[1,:], 'g--')
 ax[2,0].plot(etimes[:-1], rel_gtrans[2,:], 'b',
-             etimes[:-1], rel_ftrans[2,:], 'b--')
+             etimes[:-1], rel_etrans[2,:], 'b--')
 ax[0,1].plot(etimes[:-1], rel_grot[0,:], 'r',
-             etimes[:-1], rel_frot[0,:], 'r--')
+             etimes[:-1], rel_erot[0,:], 'r--')
 ax[1,1].plot(etimes[:-1], rel_grot[1,:], 'g',
-             etimes[:-1], rel_frot[1,:], 'g--')
+             etimes[:-1], rel_erot[1,:], 'g--')
 ax[2,1].plot(etimes[:-1], rel_grot[2,:], 'b',
-             etimes[:-1], rel_frot[2,:], 'b--')
+             etimes[:-1], rel_erot[2,:], 'b--')
            
 ax[0,0].set_ylabel("V_x")
 ax[1,0].set_ylabel("V_y")
@@ -154,17 +154,17 @@ for a in ax.ravel():
 # Plot the absolute translation and rotation
 fig,ax = plt.subplots(3,2)
 ax[0,0].plot(etimes, gtrans[0,:], 'r',
-             etimes, ftrans[0,:], 'r--')
+             etimes, etrans[0,:], 'r--')
 ax[1,0].plot(etimes, gtrans[1,:], 'g',
-             etimes, ftrans[1,:], 'g--')
+             etimes, etrans[1,:], 'g--')
 ax[2,0].plot(etimes, gtrans[2,:], 'b',
-             etimes, ftrans[2,:], 'b--')
+             etimes, etrans[2,:], 'b--')
 ax[0,1].plot(etimes, grot_eul[0,:], 'r',
-             etimes, frot_eul[0,:], 'r--')
+             etimes, erot_eul[0,:], 'r--')
 ax[1,1].plot(etimes, grot_eul[1,:], 'g',
-             etimes, frot_eul[1,:], 'g--')
+             etimes, erot_eul[1,:], 'g--')
 ax[2,1].plot(etimes, grot_eul[2,:], 'b',
-             etimes, frot_eul[2,:], 'b--')
+             etimes, erot_eul[2,:], 'b--')
 
 ax[0,0].set_ylabel("Pos_x")
 ax[1,0].set_ylabel("Pos_y")

@@ -35,7 +35,7 @@ with open(args.file, 'r') as f:
     for line in reader:
 
         counter += 1
-        if args.skip == 0 or counter % args.skip != 0:
+        if args.skip != 0 and counter % args.skip != 0:
             continue
 
         pose = SE3.from_list(line[args.scol:], args.fspec)
