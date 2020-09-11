@@ -40,9 +40,26 @@ def changePoseTimes(new_times : list, times : list, poses : list):
         except StopIteration:
             new_poses.append( poses[-1] )
     return new_poses
-        
+
+def computeStatistics(values : list) -> dict:
+    # Compute the statistics (mean, std, median, min, max) from a tuple of values
+    stats = {}
+    stats["mean"] = np.mean(values)
+    stats["std"] = np.std(values)
+    stats["med"] = np.median(values)
+    stats["min"] = np.min(values)
+    stats["max"] = np.max(values)
+
+    return stats
+
+def statString(stats : dict):
+    result = ""
+    for key, val in stats.items():
+        result += "{:>6s}: {:<.4f}\n".format(key,val)
+    return result
+
 print("Reading the estimated poses...")
-etimes, fposes = readTimedPoses(args.est_poses, args.fformat)
+etimes, eposes = readTimedPoses(args.est_poses, args.fformat)
 print("Reading the ground truth poses...")
 gtimes, gposes = readTimedPoses(args.gt_poses, args.gformat)
 print("Matching the ground truth to the estimated...")
@@ -54,25 +71,55 @@ if args.num_frames >= 0:
 else:
     frame_change_n_times = len(etimes)
     print("Using all positions to align the trajectories.")
-f_positions = np.hstack([pose._x._trans for pose in fposes])
+f_positions = np.hstack([pose._x._trans for pose in eposes])
 g_positions = np.hstack([pose._x._trans for pose in gposes])
 frame_change = analysis.umeyama(f_positions[:,:frame_change_n_times], g_positions[:,:frame_change_n_times])
 frame_change = frame_change.to_SE3().inv()
 aposes = [(frame_change * pose) for pose in gposes]
 
-n_poses = len(fposes)
-rel_fposes = [fposes[i].inv() * fposes[i+1] for i in range(n_poses-1)]
+n_poses = len(eposes)
+rel_eposes = [eposes[i].inv() * eposes[i+1] for i in range(n_poses-1)]
 rel_aposes = [aposes[i].inv() * aposes[i+1] for i in range(n_poses-1)]
-rel_ftrans = np.hstack([rel_pose._x._trans for rel_pose in rel_fposes])
+rel_ftrans = np.hstack([rel_pose._x._trans for rel_pose in rel_eposes])
 rel_gtrans = np.hstack([rel_pose._x._trans for rel_pose in rel_aposes])
 
-rel_frot = np.hstack([rel_pose._R.log() for rel_pose in rel_fposes])
+rel_frot = np.hstack([rel_pose._R.log() for rel_pose in rel_eposes])
 rel_grot = np.hstack([rel_pose._R.log() for rel_pose in rel_aposes])
 
-frot_eul = np.hstack([np.reshape(pose._R._rot.as_euler('xyz'), (3,1)) for pose in fposes])
+frot_eul = np.hstack([np.reshape(pose._R._rot.as_euler('xyz'), (3,1)) for pose in eposes])
 grot_eul = np.hstack([np.reshape(pose._R._rot.as_euler('xyz'), (3,1)) for pose in aposes])
-ftrans = np.hstack([np.reshape(pose._x._trans, (3,1)) for pose in fposes])
+ftrans = np.hstack([np.reshape(pose._x._trans, (3,1)) for pose in eposes])
 gtrans = np.hstack([np.reshape(pose._x._trans, (3,1)) for pose in aposes])
+
+
+# Gather statistics
+# Statistics are: mean, variance, median, min, max
+
+# Frame-to-frame errors are position change and attitude change
+relative_position_error = np.linalg.norm(rel_gtrans - rel_ftrans, axis=0)
+relative_position_error_stats = computeStatistics(relative_position_error)
+print()
+print("Relative position error (m) stats:")
+print(statString(relative_position_error_stats))
+
+rel_err_rot = np.hstack([(rgpose._R.inv() * repose._R).log() for (rgpose, repose) in zip(rel_aposes, rel_eposes)])
+relative_attitude_error = np.linalg.norm(rel_err_rot, axis=0) * (180.0 / np.pi)
+relative_attitude_error_stats = computeStatistics(relative_attitude_error)
+print("Relative attitude error (deg) stats:")
+print(statString(relative_attitude_error_stats))
+
+# Global errors are position and attitude
+absolute_position_error = np.linalg.norm(gtrans - ftrans, axis=0)
+absolute_position_error_stats = computeStatistics(absolute_position_error)
+print("Absolute position error (m) stats:")
+print(statString(absolute_position_error_stats))
+
+abs_err_rot = np.hstack([(gpose._R.inv() * epose._R).log() for (gpose, epose) in zip(aposes, eposes)])
+absolute_attitude_error = np.linalg.norm(abs_err_rot, axis=0) * (180.0 / np.pi)
+absolute_attitude_error_stats = computeStatistics(absolute_attitude_error)
+print("Absolute attitude error (deg) stats:")
+print(statString(absolute_attitude_error_stats))
+
 
 
 # Plot the relative translation and rotation
@@ -140,9 +187,9 @@ ax = fig.add_subplot(111, projection='3d')
 ax.plot(np.hstack([pose._x._trans[0] for pose in aposes]),
         np.hstack([pose._x._trans[1] for pose in aposes]),
         np.hstack([pose._x._trans[2] for pose in aposes]))
-ax.plot(np.hstack([pose._x._trans[0] for pose in fposes]),
-        np.hstack([pose._x._trans[1] for pose in fposes]),
-        np.hstack([pose._x._trans[2] for pose in fposes]))
+ax.plot(np.hstack([pose._x._trans[0] for pose in eposes]),
+        np.hstack([pose._x._trans[1] for pose in eposes]),
+        np.hstack([pose._x._trans[2] for pose in eposes]))
 
 
 
