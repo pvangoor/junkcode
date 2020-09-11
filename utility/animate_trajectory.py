@@ -13,6 +13,7 @@ parser.add_argument("--fspec", type=str, default='xw', help="Format of the poses
 parser.add_argument("--scol", type=int, default=1, help="The column where the poses start. Default 1.")
 parser.add_argument("--srow", type=int, default=1, help="The row where the poses start. Default 1.")
 parser.add_argument("--delim", type=str, default=",", help="The delimiter. Default \",\".")
+parser.add_argument("--skip", type=int, default=0, help="The number of poses to skip between frames. Default 0.")
 
 args = parser.parse_args()
 
@@ -30,7 +31,13 @@ with open(args.file, 'r') as f:
 
     # Read the poses and animate trajectory
     trail = np.zeros((3,0))
+    counter = 0
     for line in reader:
+
+        counter += 1
+        if args.skip == 0 or counter % args.skip != 0:
+            continue
+
         pose = SE3.from_list(line[args.scol:], args.fspec)
         trail = np.hstack((trail,pose.x()))
         # print(pose.q())
@@ -42,7 +49,7 @@ with open(args.file, 'r') as f:
         ax.set_xlabel("x")
         ax.set_ylabel("y")
         ax.set_zlabel("z")
-        ax.set_box_aspect(np.max(trail, axis=1))
+        ax.set_box_aspect(np.max(trail, axis=1)-np.min(trail,axis=1) + np.ones(3)*2)
 
         plt.pause(0.02) # 50 Hz
 
