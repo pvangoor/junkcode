@@ -59,7 +59,7 @@ def statString(stats : dict):
     return result
 
 print("Reading the estimated poses...")
-etimes, eposes = readTimedPoses(args.est_poses, args.fformat)
+etimes, eposes = readTimedPoses(args.est_poses, args.eformat)
 print("Reading the ground truth poses...")
 gtimes, gposes = readTimedPoses(args.gt_poses, args.gformat)
 print("Matching the ground truth to the estimated...")
