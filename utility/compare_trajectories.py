@@ -58,6 +58,13 @@ def statString(stats : dict):
         result += "{:>6s}: {:<.4f}\n".format(key,val)
     return result
 
+def plotStatLines(ax, times, stats):
+    tdiff = [times[0], times[-1]]
+    ax.plot(tdiff, 2*[stats["mean"]], 'r--')
+    ax.plot(tdiff, 2*[stats["mean"]+stats["std"]], 'g--')
+    ax.plot(tdiff, 2*[stats["mean"]-stats["std"]], 'g--')
+    ax.plot(tdiff, 2*[stats["med"]], 'b--')
+
 print("Reading the estimated poses...")
 etimes, eposes = readTimedPoses(args.est_poses, args.eformat)
 print("Reading the ground truth poses...")
@@ -120,6 +127,27 @@ absolute_attitude_error_stats = computeStatistics(absolute_attitude_error)
 print("Absolute attitude error (deg) stats:")
 print(statString(absolute_attitude_error_stats))
 
+
+# Plot the relative and absolute errors over time
+fig, ax = plt.subplots(2,2)
+error_line_width = 0.5
+ax[0,0].plot(etimes[:-1], relative_position_error, 'm-', linewidth=error_line_width)
+plotStatLines(ax[0,0], etimes, relative_position_error_stats)
+ax[1,0].plot(etimes[:-1], relative_attitude_error, 'm-', linewidth=error_line_width)
+plotStatLines(ax[1,0], etimes, relative_attitude_error_stats)
+
+ax[0,1].plot(etimes, absolute_position_error, 'm-', linewidth=error_line_width)
+plotStatLines(ax[0,1], etimes, absolute_position_error_stats)
+ax[1,1].plot(etimes, absolute_attitude_error, 'm-', linewidth=error_line_width)
+plotStatLines(ax[1,1], etimes, absolute_attitude_error_stats)
+
+ax[0,0].set_title("Relative Position Error (m)")
+ax[1,0].set_title("Relative Attitude Error (deg)")
+ax[0,1].set_title("Absolute Position Error (m)")
+ax[1,1].set_title("Absolute Attitude Error (deg)")
+for a in ax.ravel():
+    a.set_xlim([etimes[0], etimes[-1]])
+    a.set_ylim([0, None])
 
 
 # Plot the relative translation and rotation
@@ -190,7 +218,6 @@ ax.plot(np.hstack([pose._x._trans[0] for pose in aposes]),
 ax.plot(np.hstack([pose._x._trans[0] for pose in eposes]),
         np.hstack([pose._x._trans[1] for pose in eposes]),
         np.hstack([pose._x._trans[2] for pose in eposes]), '--')
-
 
 
 plt.show()
