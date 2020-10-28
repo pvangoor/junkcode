@@ -25,9 +25,16 @@ def readTimedPoses(fname : str, format_spec : str):
         next(reader)
         times = []
         poses = []
+        good_times = False
         for line in reader:
-            times.append(float(line[0]))
-            poses.append(SE3.from_list(line[1:], format_spec))
+            t = float(line[0])
+            pose = SE3.from_list(line[1:], format_spec)
+            if not good_times and t > 0:
+                good_times = True
+                times = [ t for _ in times]
+                poses = [ pose for _ in poses]
+            times.append(t)
+            poses.append(pose)
     return times, poses
 
 def changePoseTimes(new_times : list, times : list, poses : list):
@@ -130,7 +137,7 @@ print(statString(absolute_attitude_error_stats))
 
 # Plot the relative and absolute errors over time
 fig, ax = plt.subplots(2,2)
-error_line_width = 0.5
+error_line_width = 0.2
 ax[0,0].plot(etimes[:-1], relative_position_error, 'm-', linewidth=error_line_width)
 plotStatLines(ax[0,0], etimes, relative_position_error_stats)
 ax[1,0].plot(etimes[:-1], relative_attitude_error, 'm-', linewidth=error_line_width)
@@ -209,15 +216,36 @@ for a in ax.ravel():
 for i in range(3):
     ax[i,1].set_ylim((-np.pi, np.pi))
 
-# Plot the full trajectories (position xy)
+# Plot the full trajectories (position 3d)
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 ax.plot(np.hstack([pose._x._trans[0] for pose in aposes]),
         np.hstack([pose._x._trans[1] for pose in aposes]),
-        np.hstack([pose._x._trans[2] for pose in aposes]))
+        np.hstack([pose._x._trans[2] for pose in aposes]), 'r')
 ax.plot(np.hstack([pose._x._trans[0] for pose in eposes]),
         np.hstack([pose._x._trans[1] for pose in eposes]),
-        np.hstack([pose._x._trans[2] for pose in eposes]), '--')
+        np.hstack([pose._x._trans[2] for pose in eposes]), 'b--')
 
+ax.set_title("Estimated vs. True Trajectory")
+ax.set_xlabel("x (m)")
+ax.set_ylabel("y (m)")
+ax.set_zlabel("z (m)")
+ax.legend(["True", "Est."])
+trail = np.hstack([pose.x() for pose in eposes])
+ax.set_box_aspect(np.max(trail, axis=1)-np.min(trail,axis=1) + np.ones(3)*2)
+
+# Plot the full trajectories (position xy)
+fig = plt.figure()
+ax = fig.add_subplot(111)
+ax.plot(np.hstack([pose._x._trans[0] for pose in aposes]),
+        np.hstack([pose._x._trans[1] for pose in aposes]), 'r')
+ax.plot(np.hstack([pose._x._trans[0] for pose in eposes]),
+        np.hstack([pose._x._trans[1] for pose in eposes]), 'b--')
+
+ax.set_title("Estimated vs. True Trajectory")
+ax.set_xlabel("x (m)")
+ax.set_ylabel("y (m)")
+ax.legend(["True", "Est."])
+ax.set_aspect("equal")
 
 plt.show()

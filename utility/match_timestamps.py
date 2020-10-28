@@ -70,6 +70,5 @@ input_times = read_times(args.input, args.i_start, args.i_col)
 template_times = read_times(args.template, args.t_start, args.t_col)
 
 template_indices = find_nearest(input_times, template_times)
-print(len(template_indices))
 
 copy_template_lines(args.template, args.t_start, template_indices)

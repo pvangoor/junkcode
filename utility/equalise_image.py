@@ -23,7 +23,10 @@ if not folder_flag:
     exit(0)
 
 # If the program reaches here, we are dealing with a folder
-new_folder = fname[:-1]+"_equalised/"
+if fname[-1] == "/":
+    new_folder = fname[:-1]+"_equalised/"
+else:
+    new_folder = fname+"_equalised/"
 if not os.path.exists(new_folder):
     os.mkdir(new_folder)
 
