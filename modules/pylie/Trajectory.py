@@ -30,7 +30,7 @@ class Trajectory:
             base_element = elements[next_idx-1]
             dt = self.times[next_idx] - self.times[next_idx-1]
             motion = (base_element.inv() * elements[next_idx]).log() / dt
-            ndt = t - self.times[next_idx]
+            ndt = t - self.times[next_idx-1]
             elem = base_element * base_element.exp(ndt * motion)
             return elem
 
@@ -44,6 +44,14 @@ class Trajectory:
 
 if __name__ == "__main__":
     import numpy as np
-    times = [0,1,2,3]
-    elements = [pylie.SO3.exp(np.random.randn(3,1)) for _ in times]
+    times = [i * 0.1 for i in range(10)]
+    motion = np.random.randn(3,1)
+    elements = [pylie.SO3.exp(motion*t) for t in times]
     traj = Trajectory(elements, times)
+
+    new_times = [0.2, 0.45, 1.2, -0.12]
+    for t in new_times:
+        group_error = traj[t] / pylie.SO3.exp(t*motion)
+        norm_error = np.linalg.norm(group_error.as_matrix() - np.eye(3))
+        print("The error at time {} is {}".format(t, norm_error))
+        
