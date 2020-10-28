@@ -71,7 +71,7 @@ class SO3(LieGroup.LieGroup):
     def exp(so3vec):
         assert so3vec.shape == (3,1), "Invalid shape of Lie algebra vector."
         result = SO3()
-        result._rot.from_rotvec(so3vec.ravel())
+        result._rot = Rotation.from_rotvec(so3vec.ravel())
         return result
 
     @staticmethod
