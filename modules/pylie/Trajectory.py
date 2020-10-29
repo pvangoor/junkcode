@@ -39,17 +39,57 @@ class Trajectory:
 
         raise NotImplementedError
 
-    def begin(self):
-        return self._times[0], self._elements[0]
+    def begin_time(self):
+        return self._times[0]
     
-    def end(self):
-        return self._times[-1], self._elements[-1]
+    def end_time(self):
+        return self._times[-1]
+    
+    def get_elements(self):
+        return self._elements
     
     def group_type(self):
         if len(self._elements) > 0:
             return type(self._elements[0])
         else:
             return None
+    
+    def __rmul__(self, other):
+        if isinstance(other, self.group_type()):
+            new_elements = [other * X for X in self._elements]
+            new_times = [t for t in self._times]
+            return Trajectory(new_elements,new_times)
+        raise NotImplementedError
+
+    def __mul__(self, other):
+        if isinstance(other, self.group_type()):
+            self._elements = [X * other for X in self._elements]
+            new_times = [t for t in self._times]
+            return Trajectory(new_elements,new_times)
+        raise NotImplementedError
+    
+    def truncate(self, t0, t1):
+        assert t0 < t1
+
+        idx0 = [j for j in range(len(self._times)) if self._times[j] >= t0]
+        if len(idx0) > 0:
+            idx0 = idx0[0]
+        else:
+            self._times.clear()
+            self._elements.clear()
+            return
+
+        idx1 = [j for j in reversed(range(len(self._times))) if self._times[j] <= t1]
+        if len(idx1) > 0:
+            idx1 = idx1[0]
+        else:
+            self._times.clear()
+            self._elements.clear()
+            return
+        
+        self._times = self._times[idx0:idx1]
+        self._elements = self._elements[idx0:idx1]
+
 
 if __name__ == "__main__":
     import numpy as np

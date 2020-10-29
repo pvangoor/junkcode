@@ -2,9 +2,27 @@ from SIM3 import SIM3 as SIM3
 import numpy as np
 from Trajectory import Trajectory
 
-def align_trajectory(trajectory0, trajectory1):
+def align_trajectory(trajectory0 : Trajectory, trajectory1 : Trajectory) -> Trajectory:
     # Align trajectory1 to trajectory0
-    pass
+    assert isinstance(trajectory0, Trajectory)
+    assert isinstance(trajectory1, Trajectory)
+    
+    t0 = max(trajectory0.begin_time(), trajectory1.begin_time())
+    t1 = min(trajectory0.end_time(), trajectory1.end_time())
+    if t0 >= t1:
+        return Trajectory()
+    
+    num_points = 100
+    times = np.linspace(t0, t1, num_points).tolist()
+    points0 = [trajectory0[t].x() for t in times]
+    points1 = [trajectory1[t].x() for t in times]
+
+    S = umeyama(points0, points1).to_SE3()
+
+    trajectoryA = S * trajectory0
+    trajectoryA.truncate(t0,t1)
+    return trajectoryA
+
 
 
 def umeyama(points1 : np.ndarray, points2 : np.ndarray) -> SIM3:
