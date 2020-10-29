@@ -1,5 +1,11 @@
 from SIM3 import SIM3 as SIM3
 import numpy as np
+from Trajectory import Trajectory
+
+def align_trajectory(trajectory0, trajectory1):
+    # Align trajectory1 to trajectory0
+    pass
+
 
 def umeyama(points1 : np.ndarray, points2 : np.ndarray) -> SIM3:
     # This function solves the least squares problem of finding a SIM3 transform S such that

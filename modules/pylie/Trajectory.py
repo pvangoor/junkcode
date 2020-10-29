@@ -3,44 +3,53 @@ import pylie
 class Trajectory:
     def __init__(self, elements = None, times = None):
         if elements is None:
-            self.elements = []
-            self.times = []
+            self._elements = []
+            self._times = []
         else:
-            self.elements = elements
+            self._elements = elements
 
         if times is None:
-            self.times = list(range(len(elements)))
+            self._times = list(range(len(elements)))
         else:
-            self.times = times
-        
+            self._times = times
+    
+    def __len__(self):
+        assert len(self._elements) == len(self._times)
+        return len(self._elements)
 
     def __getitem__(self, t):
         if isinstance(t, (int, float, complex)) and not isinstance(t, bool):
             # t is a number
             t = float(t)
-            next_idx = [j for j in range(len(self.times)) if self.times[j] > t]
+            next_idx = [j for j in range(len(self._times)) if self._times[j] > t]
             if len(next_idx) == 0:
-                next_idx = len(self.times)-1
+                next_idx = len(self._times)-1
             else:
                 next_idx = next_idx[0]
             if next_idx == 0:
                 next_idx = 1
             
             # Now (inter/extra)polate
-            base_element = elements[next_idx-1]
-            dt = self.times[next_idx] - self.times[next_idx-1]
-            motion = (base_element.inv() * elements[next_idx]).log() / dt
-            ndt = t - self.times[next_idx-1]
+            base_element = self._elements[next_idx-1]
+            dt = self._times[next_idx] - self._times[next_idx-1]
+            motion = (base_element.inv() * self._elements[next_idx]).log() / dt
+            ndt = t - self._times[next_idx-1]
             elem = base_element * base_element.exp(ndt * motion)
             return elem
 
         raise NotImplementedError
 
     def begin(self):
-        return self.times[0], self.elements[0]
+        return self._times[0], self._elements[0]
     
     def end(self):
-        return self.times[-1], self.elements[-1]
+        return self._times[-1], self._elements[-1]
+    
+    def group_type(self):
+        if len(self._elements) > 0:
+            return type(self._elements[0])
+        else:
+            return None
 
 if __name__ == "__main__":
     import numpy as np
