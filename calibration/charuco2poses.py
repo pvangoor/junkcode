@@ -8,13 +8,14 @@ import cv2
 import numpy as np
 import yaml
 from pylie import SE3
-from create_board import default_board, default_dictionary
+from charuco_create_board import default_board, default_dictionary
 
-parser = argparse.ArgumentParser(description="Calibrate a camera from a charuco board video")
+parser = argparse.ArgumentParser(description="Compute the poses of the charuco board with respect to the camera.")
 parser.add_argument('video', type=str, help="The video file name.")
 parser.add_argument('stamps', type=str, help="The timestamps file name.")
 parser.add_argument('intrinsics', type=str, help="The camera intrinsics file name")
 parser.add_argument('--size', type=float, default=39.3, help="The size of the squares on the board in mm.")
+parser.add_argument('--cam_poses', action='store_true', help="Set this flag to record camera poses w.r.t. the board instead.")
 args = parser.parse_args()
 
 aruco_dict = default_dictionary()
@@ -73,7 +74,6 @@ while True:
     rvecs.append(rvec)
     tvecs.append(tvec * 1e-3) # Adjust for mm
 
-
 # Write the poses to file
 ofname = args.video[:args.video.rfind('.')] + "_poses.csv"
 print("Writing poses to {}.".format(ofname))
@@ -89,7 +89,10 @@ with open(ofname, 'w') as f:
         pose._R = pose._R.from_matrix(Rmat)
         pose._x = pose._x.from_list(tvec.ravel().tolist())
 
-        row = [stamp] + pose.to_list('xw')
+        if args.cam_poses:
+            row = [stamp] + pose.inv().to_list('xw')
+        else:
+            row = [stamp] + pose.to_list('xw')
         writer.writerow(row)
 
 

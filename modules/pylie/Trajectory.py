@@ -52,9 +52,8 @@ class Trajectory:
                 next_idx = 1
             
             # Now (inter/extra)polate
-            base_element = self._elements[next_idx-1]
             dt = self._times[next_idx] - self._times[next_idx-1]
-            motion = (base_element.inv() * self._elements[next_idx]).log() / dt
+            motion = (self._elements[next_idx-1].inv() * self._elements[next_idx]).log() / dt
             return motion
 
         raise NotImplementedError

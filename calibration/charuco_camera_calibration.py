@@ -4,12 +4,12 @@
 
 import argparse
 import cv2
-from create_board import default_board, default_dictionary
+from charuco_create_board import default_board, default_dictionary
 
 parser = argparse.ArgumentParser(description="Calibrate a camera from a charuco board video")
 parser.add_argument('video', type=str, help="The video file name.")
 parser.add_argument('--size', type=float, default=39.3, help="The size of the squares on the board in mm.")
-parser.add_argument('--max_frames', type=int, default=50, help="The maximum number of frames to use when calibrating.")
+parser.add_argument('--max_frames', type=int, default=50, help="The maximum number of frames to use when calibrating. Default 50.")
 args = parser.parse_args()
 
 aruco_dict = default_dictionary()
