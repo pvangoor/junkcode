@@ -32,6 +32,7 @@ class SE3(LieGroup.LieGroup):
         Ad[3:6,3:6] = R
         return Ad
     
+    @staticmethod
     def adjoint(se3vec : np.ndarray) -> np.ndarray:
         assert isinstance(se3vec, np.ndarray)
         assert se3vec.shape == (6,1)
