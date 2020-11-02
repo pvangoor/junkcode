@@ -24,8 +24,24 @@ class SE3(LieGroup.LieGroup):
     def __str__(self):
         return str(self.as_matrix())
     
-    def Adjoint(self):
-        return NotImplemented
+    def Adjoint(self) -> np.ndarray:
+        Ad = np.zeros((6,6))
+        R = self.R()
+        Ad[0:3,0:3] = R
+        Ad[3:6,0:3] = SO3.skew(self.x()) @ R
+        Ad[3:6,3:6] = R
+        return Ad
+    
+    def adjoint(se3vec : np.ndarray) -> np.ndarray:
+        assert isinstance(se3vec, np.ndarray)
+        assert se3vec.shape == (6,1)
+        ad = np.zeros((6,6))
+        OmegaCross = SO3.skew(se3vec[0:3,:])
+        VCross = SO3.skew(se3vec[3:6,:])
+        ad[0:3,0:3] = OmegaCross
+        ad[3:6,0:3] = VCross
+        ad[3:6,3:6] = OmegaCross
+        return ad
     
     def __mul__(self, other):
         if isinstance(other, SE3):

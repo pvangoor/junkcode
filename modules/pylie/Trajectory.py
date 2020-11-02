@@ -39,6 +39,26 @@ class Trajectory:
 
         raise NotImplementedError
 
+    def get_velocity(self, t):
+        if isinstance(t, (int, float, complex)) and not isinstance(t, bool):
+            # t is a number
+            t = float(t)
+            next_idx = [j for j in range(len(self._times)) if self._times[j] > t]
+            if len(next_idx) == 0:
+                next_idx = len(self._times)-1
+            else:
+                next_idx = next_idx[0]
+            if next_idx == 0:
+                next_idx = 1
+            
+            # Now (inter/extra)polate
+            base_element = self._elements[next_idx-1]
+            dt = self._times[next_idx] - self._times[next_idx-1]
+            motion = (base_element.inv() * self._elements[next_idx]).log() / dt
+            return motion
+
+        raise NotImplementedError
+
     def begin_time(self):
         return self._times[0]
     
