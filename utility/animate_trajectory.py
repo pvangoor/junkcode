@@ -53,3 +53,4 @@ with open(args.file, 'r') as f:
 
         plt.pause(0.02) # 50 Hz
 
+plt.show()

@@ -20,7 +20,6 @@ def align_trajectory(trajectory0 : Trajectory, trajectory1 : Trajectory) -> Traj
     S = umeyama(points0, points1).to_SE3()
 
     trajectoryA = S * trajectory0
-    trajectoryA.truncate(t0,t1)
     return trajectoryA
 
 

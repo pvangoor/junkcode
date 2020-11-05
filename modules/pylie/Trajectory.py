@@ -1,4 +1,5 @@
 import pylie
+import numpy as np
 
 class Trajectory:
     def __init__(self, elements = None, times = None):
@@ -12,6 +13,8 @@ class Trajectory:
             self._times = list(range(len(elements)))
         else:
             self._times = times
+        
+        self._clean_duplicates()
     
     def __len__(self):
         assert len(self._elements) == len(self._times)
@@ -54,6 +57,8 @@ class Trajectory:
             # Now (inter/extra)polate
             dt = self._times[next_idx] - self._times[next_idx-1]
             motion = (self._elements[next_idx-1].inv() * self._elements[next_idx]).log() / dt
+
+            assert not np.isnan(motion).any()
             return motion
 
         raise NotImplementedError
@@ -108,6 +113,12 @@ class Trajectory:
         
         self._times = self._times[idx0:idx1]
         self._elements = self._elements[idx0:idx1]
+    
+    def _clean_duplicates(self):
+        for i in reversed(range(len(self._times)-1)):
+            if self._times[i+1] - self._times[i] < 1e-8:
+                del self._times[i+1]
+                del self._elements[i+1]
 
 
 if __name__ == "__main__":
