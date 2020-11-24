@@ -8,29 +8,17 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.animation import FuncAnimation
 import numpy as np
 
-def update_animation(frame, trail_line, poses, ax):
+def update_animation(frame, trail_line, frame_artist, poses, ax):
     # global ax
     if frame < len(poses):
         pose = poses[frame]
         trail_data = list(trail_line.get_data_3d())
-        trail_data[0] = np.append(trail_data[0], pose.x()[0,0])
-        trail_data[1] = np.append(trail_data[1], pose.x()[1,0])
-        trail_data[2] = np.append(trail_data[2], pose.x()[2,0])
+        trail_data[0] = np.append(trail_data[0], pose.x().x()[0,0])
+        trail_data[1] = np.append(trail_data[1], pose.x().x()[1,0])
+        trail_data[2] = np.append(trail_data[2], pose.x().x()[2,0])
         trail_line.set_data_3d(*trail_data)
-
-        for l in ax.lines:
-            if not l is trail_line:
-                l.remove()
-                del l
-            # fl = frame_lines.pop(0)[0]
-            # print("index", ax.lines.index(fl))
-            # # fl.remove()
-            # del fl
-        for l in reversed(ax.lines):
-            if not l is trail_line:
-                l.remove()
         
-        plotting.plotFrame(poses[frame])
+        frame_artist.set_pose_data(pose)
 
         
         
@@ -73,17 +61,17 @@ if __name__ == "__main__":
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
 
-    trail = np.hstack([pose.x() for pose in poses])
+    trail = np.hstack([pose.x().x() for pose in poses])
     trail_line, = ax.plot(trail[0,:], trail[1,:], trail[2,:], 'm')
     ax.set_box_aspect(np.max(trail, axis=1)-np.min(trail,axis=1) + np.ones(3)*2)
     trail_line.set_data_3d([], [], [])
-    # frame_lines = plotting.plotFrame(pose, '-', ax)
+    frame_artist = plotting.plotFrame(pose, '-', ax)
     ax.set_xlabel("x")
     ax.set_ylabel("y")
     ax.set_zlabel("z")
 
 
 
-    ani = FuncAnimation(fig, update_animation, frames=len(poses)+500, interval=20, fargs=[trail_line, poses, ax])
+    ani = FuncAnimation(fig, update_animation, frames=len(poses)+500, interval=20, fargs=[trail_line, frame_artist, poses, ax])
     plt.show()
 
