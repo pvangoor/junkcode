@@ -28,11 +28,10 @@ def readTimedPoses(fname : str, format_spec : str):
         good_times = False
         for line in reader:
             t = float(line[0])
+            if t < 0:
+                continue
+                
             pose = SE3.from_list(line[1:], format_spec)
-            if not good_times and t > 0:
-                good_times = True
-                times = [ t for _ in times]
-                poses = [ pose for _ in poses]
             times.append(t)
             poses.append(pose)
     return times, poses
@@ -231,7 +230,7 @@ ax.set_xlabel("x (m)")
 ax.set_ylabel("y (m)")
 ax.set_zlabel("z (m)")
 ax.legend(["True", "Est."])
-trail = np.hstack([pose.x() for pose in eposes])
+trail = np.hstack([pose.x().x() for pose in eposes])
 ax.set_box_aspect(np.max(trail, axis=1)-np.min(trail,axis=1) + np.ones(3)*2)
 
 # Plot the full trajectories (position xy)
