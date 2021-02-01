@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import ast
 import numpy as np
 import json
@@ -62,6 +63,28 @@ def solve_umeyama2d(points1, points2):
 
     return theta, x
 
+def apply_transform(theta, x, points):
+    # Apply an SE(2) transform to a set of 2D points
+    assert(points.shape[0] == 2)
+    
+    c, s = np.cos(theta), np.sin(theta)
+    R = np.array(((c, -s), (s, c)))
+
+    points_transformed =  R @ points + x
+    return points_transformed
+
+
+def compute_rmse(points1, points2):
+    # Compute the RMSE between two matched sets of 2D points.
+    assert(points1.shape[0] == 2)
+    assert(points1.shape[0] == points2.shape[0])
+    assert(points1.shape[1] == points2.shape[1])
+    num_points = points1.shape[1]
+    residual = (points1-points2).ravel()
+    MSE = 1.0/num_points * np.sum(residual**2)
+
+    return np.sqrt(MSE)
+
 
 if __name__ == '__main__':
     import argparse
@@ -76,10 +99,18 @@ if __name__ == '__main__':
 
     us_vec, gt_vec = match_aruco_points(us_aruco, gt_aruco)
 
+
+    rmse = compute_rmse(us_vec, gt_vec)
+    print("The RMSE before alignment: {}".format(rmse))
+
     theta, x = solve_umeyama2d(us_vec, gt_vec)
+    us_vec_aligned = apply_transform(theta, x, us_vec)
 
     print("The following parameters optimally transform the estimated points to the ground truth.")
     print("Rotation Angle: {}".format(theta))
     print("Translation Vector: ({}, {})".format(x[0,0], x[1,0]))
+
+    rmse = compute_rmse(us_vec_aligned, gt_vec)
+    print("The RMSE after alignment: {}".format(rmse))
 
 
