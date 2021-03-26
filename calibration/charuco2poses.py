@@ -32,7 +32,7 @@ with open(args.intrinsics, 'r') as f:
 print("Reading time stamps.")
 with open(args.stamps, 'r') as f:
     next(f) # Skip header
-    stamps = [int(row) for row in f]
+    stamps = [float(row.split(",")[0]) for row in f]
 
 # Read charuco poses
 print("Detecting charuco poses.")
