@@ -11,7 +11,7 @@ from mpl_toolkits.mplot3d import Axes3D
 parser = argparse.ArgumentParser(description="Compare estimated and groundtruth trajectories.")
 parser.add_argument("est_poses", metavar='e', type=str, help="The file containing estimated poses.")
 parser.add_argument("gt_poses", metavar='g', type=str, help="The file containing groundtruth poses.")
-parser.add_argument("--eformat", type=str, default="xq", help="The format of estimated poses. Default xq")
+parser.add_argument("--eformat", type=str, default="xw", help="The format of estimated poses. Default xw")
 parser.add_argument("--gformat", type=str, default="xw", help="The format of groundtruth poses. Default xw")
 parser.add_argument("--num_frames", type=int, default=100, help="The number of frames used to match poses. Use -1 for full alignment. Default 100.")
 
