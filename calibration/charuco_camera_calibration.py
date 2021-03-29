@@ -10,6 +10,7 @@ parser = argparse.ArgumentParser(description="Calibrate a camera from a charuco 
 parser.add_argument('video', type=str, help="The video file name.")
 parser.add_argument('--size', type=float, default=39.3, help="The size of the squares on the board in mm.")
 parser.add_argument('--max_frames', type=int, default=50, help="The maximum number of frames to use when calibrating. Default 50.")
+parser.add_argument('--min_corners', type=int, default=8, help="The minimum number of corners to detect per image. Default 8.")
 args = parser.parse_args()
 
 aruco_dict = default_dictionary()
@@ -37,7 +38,7 @@ while True:
         continue
 
     retval, charuco_corners, charuco_ids = cv2.aruco.interpolateCornersCharuco(corners, ids, gray, board)
-    if retval < 4:
+    if retval < args.min_corners:
         print("Not enough charuco corners detected in frame {}.".format(frame_counter))
         continue
 
@@ -47,7 +48,7 @@ while True:
 # Calibrate the camera
 # Limit the number of frames used
 if len(all_corners) > args.max_frames:
-    step = len(all_corners) // (args.max_frames + 1)
+    step = len(all_corners) // (args.max_frames)  + 1
     all_corners = all_corners[::step]
     all_ids = all_ids[::step]
 
