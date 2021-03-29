@@ -22,6 +22,10 @@ frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 # time = 1/frame_rate
 # last_time = 0
 
+if frame_count <= 0:
+    print("Frame count unknown. Using 1000.")
+    frame_count = 1000
+
 digits = str(len(str(frame_count)))
 count = 0
 progBar = progressbar.ProgressBar(max_value=frame_count)
