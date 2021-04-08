@@ -75,9 +75,9 @@ for k in range(N):
     else:
         dt = stamps[k+1] - stamps[k]
         if dt > 0:
-            accel = (lin_vels[k+1] - lin_vels[k]) / dt + SO3.skew(ang_vels[k]) @ lin_vels[k] - poses[k].R().T @ gravity
+            accel = (lin_vels[k+1] - lin_vels[k]) / dt + SO3.skew(ang_vels[k]) @ lin_vels[k] - poses[k].R().as_matrix().T @ gravity
         else:
-            accel = SO3.skew(ang_vels[k]) @ lin_vels[k] - poses[k].R().T @ gravity
+            accel = SO3.skew(ang_vels[k]) @ lin_vels[k] - poses[k].R().as_matrix().T @ gravity
     lin_accels.append(accel)
 
 # Choose biases

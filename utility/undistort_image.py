@@ -9,6 +9,7 @@ parser.add_argument('f',  type=str, help="The image(s) to undistort.")
 parser.add_argument('p',  type=str, help="The camera parameters.")
 parser.add_argument('--folder', action='store_true', help="Used to indicate we are converting a folder. Default: False.")
 parser.add_argument('--video', action='store_true', help="Used to indicate we are converting a video. Default: False.")
+parser.add_argument('--original_size', action='store_true', help="Used to indicate we want the frame to remain the same size. Default: False.")
 parser.add_argument('--extension', metavar='e',  type=str, default="png", help="The extension of the files to convert. Default: png.")
 args = parser.parse_args()
 
@@ -27,6 +28,7 @@ except SystemError:
 
 print("Using Camera Matrix\n", camera_matrix)
 print("Using Distortion Coefficients\n", dist_coeffs)
+
 
 fname = args.f
 folder_flag = args.folder
@@ -47,13 +49,27 @@ if args.video:
     new_fname = fname[:ext_pos] + "_undistorted" + fname[ext_pos:]
 
     ret, img = cap.read()
-    writer = cv2.VideoWriter(new_fname, cv2.VideoWriter_fourcc('M','J','P','G'), cap.get(cv2.CAP_PROP_FPS), (img.shape[1], img.shape[0]), False)
+
+    img_size = (img.shape[1], img.shape[0])
+    if not args.original_size:
+        new_camera_matrix, roi = cv2.getOptimalNewCameraMatrix(camera_matrix, dist_coeffs, img_size, 1.0)
+        remaps = cv2.initUndistortRectifyMap(
+            camera_matrix, dist_coeffs, None, new_camera_matrix, img_size, 5
+        )
+        # img_undist = cv2.undistort(img, camera_matrix, dist_coeffs, new_camera_matrix)
+        img_undist = cv2.remap(img, remaps[0], remaps[1], cv2.INTER_LINEAR)
+        img_size = (img_undist.shape[1], img_undist.shape[0])
+
+    writer = cv2.VideoWriter(new_fname, cv2.VideoWriter_fourcc('M','J','P','G'), cap.get(cv2.CAP_PROP_FPS), img_size, False)
 
     while ret:
         if len(img.shape) > 2:
             img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         
-        img_undist = cv2.undistort(img, camera_matrix, dist_coeffs)
+        if args.original_size:
+            img_undist = cv2.undistort(img, camera_matrix, dist_coeffs)
+        else:
+            img_undist = cv2.remap(img, remaps[0], remaps[1], cv2.INTER_LINEAR)
         writer.write(img_undist)
         ret, img = cap.read()
     

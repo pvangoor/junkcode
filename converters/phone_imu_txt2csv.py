@@ -39,7 +39,7 @@ except IOError:
 
 header_row = ["TIME"]
 if args.raw:
-    record_list = ['GYR', 'ACC', 'MAG']
+    record_list = ['GYR', 'ACC']
     for record in record_list:
         header_row += [record+pos for pos in ("X","Y","Z")]
     imu_fname_csv = imu_fname_txt[:-4] + ".csv"
