@@ -37,7 +37,7 @@ while True:
         continue
 
     retval, charuco_corners, charuco_ids = cv2.aruco.interpolateCornersCharuco(corners, ids, gray, board)
-    if retval < 4:
+    if retval < 8:
         print("Not enough charuco corners detected in frame {}.".format(frame_counter))
         continue
 
