@@ -10,11 +10,18 @@ parser.add_argument("mav", metavar='m', help="The file containing the MAV data."
 parser.add_argument("--enu", action='store_true', help="Use ENU instead of NED.")
 args = parser.parse_args()
 
-def ned2enu(position):
+def ned2enu(attitude, position):
     n = position[0]
     e = position[1]
     u = - position[2]
-    return [e, n, u]
+
+    rot = Rotation.from_matrix([
+        [0, 1, 0],
+        [1, 0, 0],
+        [0, 0, -1],
+    ])
+
+    return rot.inv() * attitude, [e, n, u]
 
 def lat2radius(lat):
     equatorial_radius = 6378.1370e3 # metres
@@ -71,10 +78,11 @@ with open(output_fname, 'w') as f:
     N = len(times)
     for i in range(N):
         position = gps2xyz(gps_data[0], gps_data[i])
-        if args.enu:
-            position = ned2enu(position)
-
         attitude = Rotation.from_euler('xyz', att_data[i])
+        if args.enu:
+            attitude, position = ned2enu(attitude, position)
+
+
         pose = SE3(attitude, position)
         writer.writerow([times[i]] + pose.to_list('xw'))
 
