@@ -34,15 +34,24 @@ fig, ax = plt.subplots(4,1)
 
 ax[0].hist(time_diffs, 1000)
 ax[0].set_title("Differences between relative times.")
+ax[0].set_ylabel("count (#)")
+ax[0].set_xlabel("(t-t0) - (T-T0) (s)")
 
 ax[1].hist(cpu_steps, 1000)
 ax[1].set_title("CPU time steps")
+ax[1].set_ylabel("count (#)")
+ax[1].set_xlabel("delta time (s)")
 
 ax[2].hist(mav_steps, 1000)
 ax[2].set_title("MAV time steps")
+ax[2].set_ylabel("count (#)")
+ax[2].set_xlabel("delta time (s)")
 
 ax[3].plot(times_cpu, time_diffs)
+ax[3].set_xlim([times_cpu[0], times_cpu[-1]])
+ax[3].set_ylabel("Relative timing (s).")
 ax[3].set_title("Relative time differences over cpu time")
 
+plt.tight_layout()
 
 plt.show()
