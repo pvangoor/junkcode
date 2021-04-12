@@ -6,13 +6,13 @@ from matplotlib.animation import FuncAnimation
 import numpy as np
 import progressbar
 
-def update_animation(frame, imu_lines, times, imu_data, ax):
+def update_animation(frame, imu_lines, times, imu_data, ax, frame_rate):
     # global ax
 
     frame = frame % frames
 
-    time0 = max(frame / 50.0 - args.length, 0.0)
-    time1 = frame / 50.0 
+    time1 = frame / frame_rate
+    time0 = max(time1 - args.length, 0.0)
 
     idx0 = np.argmax(times >= time0)
     idx1 = np.argmax(times >= time1)
@@ -32,6 +32,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Animate IMU data over time.")
     parser.add_argument("file", metavar='f', type=str, help="IMU file name.")
     parser.add_argument("--length", type=float, default=5., help="The number of seconds to show. Default 5.0s")
+    parser.add_argument("--rate", type=float, default=20., help="The frame rate for the animation. Default 20.0 Hz")
     parser.add_argument("--save", action='store_true', help="Save the animation instead of showing it.")
     args = parser.parse_args()
 
@@ -67,9 +68,9 @@ if __name__ == "__main__":
     ax[2,1].set_ylabel("acc z")
 
     total_time = np.max(times) - np.min(times)
-    frames = int(total_time * 50)
+    frames = int(total_time * args.rate)
 
-    ani = FuncAnimation(fig, update_animation, frames=frames, interval=20, fargs=[imu_lines, times, imu_data, ax])
+    ani = FuncAnimation(fig, update_animation, frames=frames, interval=1.0 / args.rate, fargs=[imu_lines, times, imu_data, ax, args.rate])
     plt.tight_layout()
 
     bar = progressbar.ProgressBar(max_value=frames)
