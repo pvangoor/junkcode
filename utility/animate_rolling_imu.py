@@ -4,6 +4,7 @@ import csv
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 import numpy as np
+import progressbar
 
 def update_animation(frame, imu_lines, times, imu_data, ax):
     # global ax
@@ -21,6 +22,8 @@ def update_animation(frame, imu_lines, times, imu_data, ax):
     for i in range(6):
         imu_lines[i].set_data(times[idx0:idx1, 0], imu_data[idx0:idx1, i])
         ax.ravel()[i].set_xlim([times[idx0], times[idx1-1]])
+
+    bar.update(frame)
         
 
 
@@ -69,8 +72,12 @@ if __name__ == "__main__":
     ani = FuncAnimation(fig, update_animation, frames=frames, interval=20, fargs=[imu_lines, times, imu_data, ax])
     plt.tight_layout()
 
+    bar = progressbar.ProgressBar(max_value=frames)
+
     if args.save:
         ani.save('rolling_imu_animation.mp4', fps=50)
     else:
         plt.show()
+    
+    bar.finish()
 
