@@ -72,7 +72,7 @@ if __name__ == '__main__':
             remaps, udist_size = create_undistortion_maps(img, args.full_size)
 
             writer = cv2.VideoWriter(new_fname, cv2.VideoWriter_fourcc(
-                *"MJPG"), cap.get(cv2.CAP_PROP_FPS), udist_size, isColor=(len(img.shape)>2))
+                *"X264"), cap.get(cv2.CAP_PROP_FPS), udist_size, isColor=(len(img.shape)>2))
 
             while(ret):
                 img_undist = cv2.remap(img, remaps[0], remaps[1], cv2.INTER_LINEAR)

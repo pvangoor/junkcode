@@ -24,7 +24,7 @@ if len(images) == 0:
 img0 = cv2.imread(images[0])
 
 videoName = folderName[:-1]+'.mkv'
-writer = cv2.VideoWriter(videoName, cv2.VideoWriter_fourcc('H','2','6','4'), args.rate, (img0.shape[1], img0.shape[0]))
+writer = cv2.VideoWriter(videoName, cv2.VideoWriter_fourcc(*"X264"), args.rate, (img0.shape[1], img0.shape[0]))
 
 
 bar = progressbar.ProgressBar(max_value=len(images))
