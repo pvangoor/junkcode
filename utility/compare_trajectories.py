@@ -13,7 +13,7 @@ parser.add_argument("est_poses", metavar='e', type=str, help="The file containin
 parser.add_argument("gt_poses", metavar='g', type=str, help="The file containing groundtruth poses.")
 parser.add_argument("--eformat", type=str, default="xw", help="The format of estimated poses. Default xw")
 parser.add_argument("--gformat", type=str, default="xw", help="The format of groundtruth poses. Default xw")
-parser.add_argument("--num_frames", type=int, default=100, help="The number of frames used to match poses. Use -1 for full alignment. Default 100.")
+parser.add_argument("--num_frames", type=int, default=-1, help="The number of frames used to match poses. Use -1 for full alignment. Default -1.")
 
 args = parser.parse_args()
 
