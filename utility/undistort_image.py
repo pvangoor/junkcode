@@ -12,7 +12,8 @@ def read_camera_parameters(fname: str):
         fs = cv2.FileStorage(fname, cv2.FILE_STORAGE_READ)
         camera_matrix = fs.getNode("camera_matrix").mat()
         dist_coeffs = fs.getNode("dist_coeffs").mat()
-    except SystemError:
+    except SystemError as e:
+        print(e)
         import yaml
         import numpy as np
         with open(fname, 'r') as f:
