@@ -14,8 +14,8 @@ def update_animation(frame, imu_lines, times, imu_data, ax, frame_rate):
     time1 = frame / frame_rate
     time0 = max(time1 - args.length, 0.0)
 
-    idx0 = np.argmax(times >= time0)
-    idx1 = np.argmax(times >= time1)
+    idx0 = np.argmax(times >= time0 + times[0,0])
+    idx1 = np.argmax(times >= time1 + times[0,0])
     if idx1 <= idx0:
         idx1 = idx0+2
 
@@ -52,6 +52,8 @@ if __name__ == "__main__":
         gyr_data = imu_data[:, 0:3]
         acc_data = imu_data[:, 3:6]
         times = np.reshape(times, (-1,1))
+    
+    print("Read {} IMU data points.".format(times.shape[0]))
 
     fig, ax = plt.subplots(3,2)
 
@@ -76,7 +78,7 @@ if __name__ == "__main__":
     bar = progressbar.ProgressBar(max_value=frames)
 
     if args.save:
-        ani.save('rolling_imu_animation.mp4', fps=50)
+        ani.save('rolling_imu_animation.mp4', fps=args.rate)
     else:
         plt.show()
     
