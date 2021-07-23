@@ -41,8 +41,7 @@
             "args": [
                 "rosbag/phone_stationary2.txt"
             ]
-        }
-
+        },
         {
             "name": "Video & IMU to Rosbag",
             "type": "python",
