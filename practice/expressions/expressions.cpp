@@ -24,13 +24,22 @@ double get_derivative(const double& u) {return 0.0; }
 
 struct Par : NumExpression<Par> {
     double val;
+    double der = 1.0;
 
     Par(const double v) : val(v) {};
     double value() const {return val;}
-    double derivative() const {return 1.0;}
+    double derivative() const {return der;}
 
-    template <typename E>
+    template <num_expr E>
     Par(NumExpression<E> const& expr) : val(expr.value()) {}
+
+    template <num_expr E>
+    Par& operator=(NumExpression<E> const& expr) {
+       val = expr.value();
+       der = expr.derivative();
+       return *this;
+    }
+    
 };
 
 // struct Var : VarExpression<Var> {
@@ -136,6 +145,102 @@ operator*(double const& u, NumExpression<E2> const& v) {
    return NumProd<double, E2>(u, *static_cast<const E2*>(&v));
 };
 
+// Generic Binary Operation
+template <num_expr E1, num_expr E2, typename BinaryOp>
+struct NumBinaryOp : public NumExpression<NumBinaryOp<E1, E2, BinaryOp> > {
+    E1 const& _u;
+    E2 const& _v;
+
+    NumBinaryOp(E1 const& u, E2 const& v) : _u(u), _v(v) {}
+    double value() const { return BinaryOp::get_value(get_value(_u), get_value(_v)); }
+    double derivative() const { return BinaryOp::get_derivative(get_value(_u), get_derivative(_u), get_value(_v), get_derivative(_v)); }
+};
+
+
+template <num_expr E1, typename BinaryOp>
+struct NumBinaryOp<E1, double, BinaryOp> : public NumExpression<NumBinaryOp<E1, double, BinaryOp> > {
+    E1 const& _u;
+    double const _v;
+
+    NumBinaryOp(E1 const& u, double const& v) : _u(u), _v(v) {}
+    double value() const { return BinaryOp::get_value(get_value(_u), get_value(_v)); }
+    double derivative() const { return BinaryOp::get_derivative(get_value(_u), get_derivative(_u), get_value(_v), get_derivative(_v)); }
+};
+
+template <num_expr E2, typename BinaryOp>
+struct NumBinaryOp<double, E2, BinaryOp> : public NumExpression<NumBinaryOp<double, E2, BinaryOp> > {
+    double const _u;
+    E2 const& _v;
+
+    NumBinaryOp(double const& u, E2 const& v) : _u(u), _v(v) {}
+    double value() const { return BinaryOp::get_value(get_value(_u), get_value(_v)); }
+    double derivative() const { return BinaryOp::get_derivative(get_value(_u), get_derivative(_u), get_value(_v), get_derivative(_v)); }
+};
+
+// Templated subtraction
+struct SubtractionOp {
+   static double get_value(const double& x1, const double& x2) {
+      return x1 - x2;
+   }
+   static double get_derivative(const double& x1, const double& dx1, const double& x2, const double& dx2) {
+      return dx1 - dx2;
+   }
+};
+
+template<num_expr E1, num_expr E2>
+using NumSub = NumBinaryOp<E1,E2,SubtractionOp>;
+
+template <num_expr E1, num_expr E2>
+NumSub<E1, E2>
+operator-(NumExpression<E1> const& u, NumExpression<E2> const& v) {
+   return NumSub<E1, E2>(*static_cast<const E1*>(&u), *static_cast<const E2*>(&v));
+};
+
+template <num_expr E1>
+NumSub<E1, double>
+operator-(NumExpression<E1> const& u, double const& v) {
+   return NumSub<E1, double>(*static_cast<const E1*>(&u), v);
+};
+
+template <num_expr E2>
+NumSub<double, E2>
+operator-(double const& u, NumExpression<E2> const& v) {
+   return NumSub<double, E2>(u, *static_cast<const E2*>(&v));
+};
+
+// Templated division
+struct DivisionOp {
+   static double get_value(const double& x1, const double& x2) {
+      return x1 / x2;
+   }
+   static double get_derivative(const double& x1, const double& dx1, const double& x2, const double& dx2) {
+      return (dx1 * x2 - x1 * dx2) / (x2 * x2);
+   }
+};
+
+template<num_expr E1, num_expr E2>
+using NumDiv = NumBinaryOp<E1,E2,DivisionOp>;
+
+template <num_expr E1, num_expr E2>
+NumDiv<E1, E2>
+operator/(NumExpression<E1> const& u, NumExpression<E2> const& v) {
+   return NumDiv<E1, E2>(*static_cast<const E1*>(&u), *static_cast<const E2*>(&v));
+};
+
+template <num_expr E1>
+NumDiv<E1, double>
+operator/(NumExpression<E1> const& u, double const& v) {
+   return NumDiv<E1, double>(*static_cast<const E1*>(&u), v);
+};
+
+template <num_expr E2>
+NumDiv<double, E2>
+operator/(double const& u, NumExpression<E2> const& v) {
+   return NumDiv<double, E2>(u, *static_cast<const E2*>(&v));
+};
+
+
+
 // exponential
 template <typename E>
 struct NumExp : public NumExpression<NumExp<E>> {
@@ -181,7 +286,7 @@ int main() {
 
    cout << "Hello" << endl;
    cout << x.value() << endl;
-   auto sum3 = 10 + 1.0 * log(exp(2*x));
+   auto sum3 = 10 + x / 3.0 - 1.0 * log(exp(2*x));
 
    cout << sum3.value() << endl;
    cout << sum3.derivative() << endl;
