@@ -16,3 +16,4 @@ makeDepthMaps/.vscode/settings.json
 makeDepthMaps/*/*.pfm
 practice/cmake/build/*
 practice/expressions/expressions
+practice/duals/duals
