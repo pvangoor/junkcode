@@ -25,7 +25,6 @@ def readTimedPoses(fname : str, format_spec : str):
         next(reader)
         times = []
         poses = []
-        good_times = False
         for line in reader:
             t = float(line[0])
             if t < 0:
