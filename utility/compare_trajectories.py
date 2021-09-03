@@ -1,62 +1,55 @@
 #!/usr/bin/env python3
-from pylie import SE3
+from os import error
+from pylie import SE3, Trajectory
 from pylie import analysis
 import csv
 import argparse
+import yaml
 
 import numpy as np
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 
 
-def readTimedPoses(fname : str, format_spec : str, min_time : float = -1.0):
+def read_trajectory(fname: str, format_spec: str, min_time: float = -1.0) -> Trajectory:
+    times = []
+    poses = []
     with open(fname, 'r') as file:
         reader = csv.reader(file)
         # Skip header
         next(reader)
-        times = []
-        poses = []
         for line in reader:
             t = float(line[0])
             if t < 0:
                 continue
-            
             if min_time > 0 and t < min_time:
                 continue
-                
+
             pose = SE3.from_list(line[1:], format_spec)
             times.append(t)
             poses.append(pose)
-    return times, poses
 
-def changePoseTimes(new_times : list, times : list, poses : list):
-    # Compute the poses at new_times rather than times
-    new_poses = []
-    for t in new_times:
-        try:
-            old_time_index = next(i for i, ti in enumerate(times) if ti >= t)
-            new_poses.append(poses[old_time_index])
-        except StopIteration:
-            new_poses.append( poses[-1] )
-    return new_poses
+    return Trajectory(poses, times)
 
-def computeStatistics(values : list) -> dict:
+
+def computeStatistics(values: list) -> dict:
     # Compute the statistics (mean, std, median, min, max) from a tuple of values
     stats = {}
-    stats["rmse"] = np.sqrt(np.mean(values**2))
-    stats["mean"] = np.mean(values)
-    stats["std"] = np.std(values)
-    stats["med"] = np.median(values)
-    stats["min"] = np.min(values)
-    stats["max"] = np.max(values)
+    stats["rmse"] = float(np.sqrt(np.mean(values**2)))
+    stats["mean"] = float(np.mean(values))
+    stats["std"] = float(np.std(values))
+    stats["med"] = float(np.median(values))
+    stats["min"] = float(np.min(values))
+    stats["max"] = float(np.max(values))
 
     return stats
 
-def statString(stats : dict):
+
+def statString(stats: dict):
     result = ""
     for key, val in stats.items():
-        result += "{:>6s}: {:<.4f}\n".format(key,val)
+        result += "{:>6s}: {:<.4f}\n".format(key, val)
     return result
+
 
 def plotStatLines(ax, times, stats):
     tdiff = [times[0], times[-1]]
@@ -65,149 +58,153 @@ def plotStatLines(ax, times, stats):
     ax.plot(tdiff, 2*[stats["mean"]-stats["std"]], 'g--')
     ax.plot(tdiff, 2*[stats["med"]], 'b--')
 
-if __name__ == '__main__':
+def get_traj_velocities(traj):
+    traj_vel = np.hstack(traj.get_velocities())
+    traj_vel[0:3, :] = traj_vel[0:3, :] * 180.0 / np.pi
+    return traj_vel
 
-    parser = argparse.ArgumentParser(description="Compare estimated and groundtruth trajectories.")
-    parser.add_argument("est_poses", metavar='e', type=str, help="The file containing estimated poses.")
-    parser.add_argument("gt_poses", metavar='g', type=str, help="The file containing groundtruth poses.")
-    parser.add_argument("--eformat", type=str, default="xw", help="The format of estimated poses. Default xw")
-    parser.add_argument("--gformat", type=str, default="xw", help="The format of groundtruth poses. Default xw")
-    parser.add_argument("--num_frames", type=int, default=-1, help="The number of frames used to match poses. Use -1 for full alignment. Default -1.")
-    parser.add_argument("--noplot", action='store_true', help="Set to true to suppress plot output.")
-    parser.add_argument("--start", type=float, default=0.0, help="Time (from first data) at which to start the comparison.")
+def compute_errors(traj1: Trajectory, traj2: Trajectory, traj1_vel, traj2_vel):
+    # Absolute position
+    pos_err_abs = np.hstack([P1.x().as_vector() - P2.x().as_vector()
+                            for P1, P2 in zip(traj1.get_elements(), traj2.get_elements())])
+    pos_err_abs = np.linalg.norm(pos_err_abs, axis=0)
+
+    att_err_abs = np.hstack([(P1.R().inv() * P2.R()).log()
+                            for P1, P2 in zip(traj1.get_elements(), traj2.get_elements())])
+    att_err_abs = np.linalg.norm(att_err_abs, axis=0) * 180.0 / np.pi
+
+    pos_err_rel = np.linalg.norm(traj1_vel[3:6, :] - traj2_vel[3:6, :], axis=0)
+    att_err_rel = np.linalg.norm(traj1_vel[0:3, :] - traj2_vel[0:3, :], axis=0) * 180.0 / np.pi
+
+    return pos_err_abs, att_err_abs, pos_err_rel, att_err_rel
+
+def gather_error_stats(pos_err_abs, att_err_abs, pos_err_rel, att_err_rel):
+    error_dict = {}
+    error_dict["absolute"] = {}
+    error_dict["absolute"]["position"] = computeStatistics(pos_err_abs)
+    error_dict["absolute"]["attitude"] = computeStatistics(att_err_abs)
+
+    error_dict["relative"] = {}
+    error_dict["relative"]["position"] = computeStatistics(pos_err_rel)
+    error_dict["relative"]["attitude"] = computeStatistics(att_err_rel)
+
+    return error_dict
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(
+        description="Compare estimated and groundtruth trajectories.")
+    parser.add_argument("est_poses", metavar='e', type=str,
+                        help="The file containing estimated poses.")
+    parser.add_argument("gt_poses", metavar='g', type=str,
+                        help="The file containing groundtruth poses.")
+    parser.add_argument("--eformat", type=str, default="xw",
+                        help="The format of estimated poses. Default xw")
+    parser.add_argument("--gformat", type=str, default="xw",
+                        help="The format of groundtruth poses. Default xw")
+    parser.add_argument("--noplot", action='store_true',
+                        help="Set to true to suppress plot output.")
+    parser.add_argument("--start", type=float, default=0.0,
+                        help="Time (from first data) at which to start the comparison. Default 0.0")
+    parser.add_argument("-o", "--output", type=str, default=None,
+                        help="File to write error statistics to. Defalt None.")
 
     args = parser.parse_args()
 
-    print("Reading the ground truth poses...")
-    gtimes, gposes = readTimedPoses(args.gt_poses, args.gformat)
-    min_time = gtimes[0] + args.start
-    print("Reading the estimated poses...")
-    etimes, eposes = readTimedPoses(args.est_poses, args.eformat, min_time)
-    print("Matching the ground truth to the estimated...")
-    gposes = changePoseTimes(etimes, gtimes, gposes)
+    print("Reading the pose files...")
+    tru_traj = read_trajectory(args.gt_poses, args.gformat)
+    min_time = tru_traj.begin_time() + args.start
+    est_traj = read_trajectory(args.est_poses, args.eformat, min_time)
 
-    if args.num_frames >= 0:
-        frame_change_n_times = min(args.num_frames, len(etimes))
-        print("Using the first {} positions to align the trajectories.".format(frame_change_n_times))
+    print("Aligning trajectories...")
+    tru_traj.truncate(est_traj.begin_time(), est_traj.end_time())
+    tru_traj = tru_traj[est_traj.get_times()]
+    est_traj, align_params = analysis.align_trajectory(
+        est_traj, tru_traj, ret_params=True)
+
+    if len(est_traj) < 2 or len(tru_traj) < 2:
+        raise ValueError("No valid poses available.")
+
+    print("Computing errors...")
+    est_vel = get_traj_velocities(est_traj)
+    tru_vel = get_traj_velocities(tru_traj)
+    pos_err_abs, att_err_abs, pos_err_rel, att_err_rel = compute_errors(tru_traj, est_traj, tru_vel, est_vel)
+    error_stats = gather_error_stats(pos_err_abs, att_err_abs, pos_err_rel, att_err_rel)
+    if args.output:
+        with open(args.output, 'w') as f:
+            yaml.safe_dump(error_stats, f)
     else:
-        frame_change_n_times = len(etimes)
-        print("Using all positions to align the trajectories.")
-    e_positions = np.hstack([pose._x._trans for pose in eposes])
-    g_positions = np.hstack([pose._x._trans for pose in gposes])
-    frame_change = analysis.umeyama(e_positions[:,:frame_change_n_times], g_positions[:,:frame_change_n_times])
-    frame_change = frame_change.to_SE3().inv()
-    aposes = [(frame_change * pose) for pose in gposes]
-
-    n_poses = len(eposes)
-    rel_eposes = [eposes[i].inv() * eposes[i+1] for i in range(n_poses-1)]
-    rel_aposes = [aposes[i].inv() * aposes[i+1] for i in range(n_poses-1)]
-    rel_etrans = np.hstack([rel_pose._x._trans for rel_pose in rel_eposes])
-    rel_gtrans = np.hstack([rel_pose._x._trans for rel_pose in rel_aposes])
-
-    rel_erot = np.hstack([rel_pose._R.log() for rel_pose in rel_eposes])
-    rel_grot = np.hstack([rel_pose._R.log() for rel_pose in rel_aposes])
-
-    erot_eul = np.hstack([np.reshape(pose._R._rot.as_euler('xyz'), (3,1)) for pose in eposes])
-    grot_eul = np.hstack([np.reshape(pose._R._rot.as_euler('xyz'), (3,1)) for pose in aposes])
-    etrans = np.hstack([np.reshape(pose._x._trans, (3,1)) for pose in eposes])
-    gtrans = np.hstack([np.reshape(pose._x._trans, (3,1)) for pose in aposes])
-
-
-    # Gather statistics
-    # Statistics are: mean, variance, median, min, max
-
-    # Frame-to-frame errors are position change and attitude change
-    relative_position_error = np.linalg.norm(rel_gtrans - rel_etrans, axis=0)
-    relative_position_error_stats = computeStatistics(relative_position_error)
-    print()
-    print("Relative position error (m) stats:")
-    print(statString(relative_position_error_stats))
-
-    rel_err_rot = np.hstack([(rgpose._R.inv() * repose._R).log() for (rgpose, repose) in zip(rel_aposes, rel_eposes)])
-    relative_attitude_error = np.linalg.norm(rel_err_rot, axis=0) * (180.0 / np.pi)
-    relative_attitude_error_stats = computeStatistics(relative_attitude_error)
-    print("Relative attitude error (deg) stats:")
-    print(statString(relative_attitude_error_stats))
-
-    # Global errors are position and attitude
-    absolute_position_error = np.linalg.norm(gtrans - etrans, axis=0)
-    absolute_position_error_stats = computeStatistics(absolute_position_error)
-    print("Absolute position error (m) stats:")
-    print(statString(absolute_position_error_stats))
-
-    abs_err_rot = np.hstack([(gpose._R.inv() * epose._R).log() for (gpose, epose) in zip(aposes, eposes)])
-    absolute_attitude_error = np.linalg.norm(abs_err_rot, axis=0) * (180.0 / np.pi)
-    absolute_attitude_error_stats = computeStatistics(absolute_attitude_error)
-    print("Absolute attitude error (deg) stats:")
-    print(statString(absolute_attitude_error_stats))
-
+        print(yaml.safe_dump(error_stats))
 
     if not args.noplot:
+        all_times = tru_traj.get_times()
         # Plot the relative and absolute errors over time
         fig, ax = plt.subplots(2,2)
         error_line_width = 0.2
-        ax[0,0].plot(etimes[:-1], relative_position_error, 'm-', linewidth=error_line_width)
-        plotStatLines(ax[0,0], etimes, relative_position_error_stats)
-        ax[1,0].plot(etimes[:-1], relative_attitude_error, 'm-', linewidth=error_line_width)
-        plotStatLines(ax[1,0], etimes, relative_attitude_error_stats)
+        ax[0,0].plot(all_times[:-1], pos_err_rel, 'm-', linewidth=error_line_width)
+        plotStatLines(ax[0,0], all_times, error_stats["relative"]["position"])
+        ax[1,0].plot(all_times[:-1], att_err_rel, 'm-', linewidth=error_line_width)
+        plotStatLines(ax[1,0], all_times, error_stats["relative"]["attitude"])
 
-        ax[0,1].plot(etimes, absolute_position_error, 'm-', linewidth=error_line_width)
-        plotStatLines(ax[0,1], etimes, absolute_position_error_stats)
-        ax[1,1].plot(etimes, absolute_attitude_error, 'm-', linewidth=error_line_width)
-        plotStatLines(ax[1,1], etimes, absolute_attitude_error_stats)
+        ax[0,1].plot(all_times, pos_err_abs, 'm-', linewidth=error_line_width)
+        plotStatLines(ax[0,1], all_times, error_stats["absolute"]["position"])
+        ax[1,1].plot(all_times, att_err_abs, 'm-', linewidth=error_line_width)
+        plotStatLines(ax[1,1], all_times, error_stats["absolute"]["position"])
 
         ax[0,0].set_title("Relative Position Error (m)")
         ax[1,0].set_title("Relative Attitude Error (deg)")
         ax[0,1].set_title("Absolute Position Error (m)")
         ax[1,1].set_title("Absolute Attitude Error (deg)")
         for a in ax.ravel():
-            a.set_xlim([etimes[0], etimes[-1]])
+            a.set_xlim([all_times[0], all_times[-1]])
             a.set_ylim([0, None])
-
 
         # Plot the relative translation and rotation
         fig, ax = plt.subplots(3,2)
-        ax[0,0].plot(etimes[:-1], rel_gtrans[0,:], 'r',
-                    etimes[:-1], rel_etrans[0,:], 'r--')
-        ax[1,0].plot(etimes[:-1], rel_gtrans[1,:], 'g',
-                    etimes[:-1], rel_etrans[1,:], 'g--')
-        ax[2,0].plot(etimes[:-1], rel_gtrans[2,:], 'b',
-                    etimes[:-1], rel_etrans[2,:], 'b--')
-        ax[0,1].plot(etimes[:-1], rel_grot[0,:], 'r',
-                    etimes[:-1], rel_erot[0,:], 'r--')
-        ax[1,1].plot(etimes[:-1], rel_grot[1,:], 'g',
-                    etimes[:-1], rel_erot[1,:], 'g--')
-        ax[2,1].plot(etimes[:-1], rel_grot[2,:], 'b',
-                    etimes[:-1], rel_erot[2,:], 'b--')
-                
-        ax[0,0].set_ylabel("V_x")
-        ax[1,0].set_ylabel("V_y")
-        ax[2,0].set_ylabel("V_z")
+        ax[0,0].plot(all_times[:-1], tru_vel[3,:], 'r',
+                    all_times[:-1], est_vel[3,:], 'r--')
+        ax[1,0].plot(all_times[:-1], tru_vel[4,:], 'g',
+                    all_times[:-1], est_vel[4,:], 'g--')
+        ax[2,0].plot(all_times[:-1], tru_vel[5,:], 'b',
+                    all_times[:-1], est_vel[5,:], 'b--')
+        ax[0,1].plot(all_times[:-1], tru_vel[0,:], 'r',
+                    all_times[:-1], est_vel[0,:], 'r--')
+        ax[1,1].plot(all_times[:-1], tru_vel[1,:], 'g',
+                    all_times[:-1], est_vel[1,:], 'g--')
+        ax[2,1].plot(all_times[:-1], tru_vel[2,:], 'b',
+                    all_times[:-1], est_vel[2,:], 'b--')
+
+        ax[0,0].set_ylabel("V_x (m/s)")
+        ax[1,0].set_ylabel("V_y (m/s)")
+        ax[2,0].set_ylabel("V_z (m/s)")
         ax[0,0].set_title("Position Change")
         ax[2,0].set_xlabel('Time')
-        ax[0,1].set_ylabel("Omega_x")
-        ax[1,1].set_ylabel("Omega_y")
-        ax[2,1].set_ylabel("Omega_z")
+        ax[0,1].set_ylabel("Omega_x (deg/s)")
+        ax[1,1].set_ylabel("Omega_y (deg/s)")
+        ax[2,1].set_ylabel("Omega_z (deg/s)")
         ax[0,1].set_title("Attitude Change")
         ax[2,1].set_xlabel('Time')
         for a in ax.ravel():
-            a.set_xlim((etimes[0], etimes[-2]))
-
+            a.set_xlim((all_times[0], all_times[-2]))
 
         # Plot the absolute translation and rotation
         fig,ax = plt.subplots(3,2)
-        ax[0,0].plot(etimes, gtrans[0,:], 'r',
-                    etimes, etrans[0,:], 'r--')
-        ax[1,0].plot(etimes, gtrans[1,:], 'g',
-                    etimes, etrans[1,:], 'g--')
-        ax[2,0].plot(etimes, gtrans[2,:], 'b',
-                    etimes, etrans[2,:], 'b--')
-        ax[0,1].plot(etimes, grot_eul[0,:], 'r',
-                    etimes, erot_eul[0,:], 'r--')
-        ax[1,1].plot(etimes, grot_eul[1,:], 'g',
-                    etimes, erot_eul[1,:], 'g--')
-        ax[2,1].plot(etimes, grot_eul[2,:], 'b',
-                    etimes, erot_eul[2,:], 'b--')
+        est_pos = np.hstack([P.x().as_vector() for P in est_traj.get_elements()])
+        tru_pos = np.hstack([P.x().as_vector() for P in tru_traj.get_elements()])
+        ax[0,0].plot(all_times, tru_pos[0,:], 'r',
+                    all_times, est_pos[0,:], 'r--')
+        ax[1,0].plot(all_times, tru_pos[1,:], 'g',
+                    all_times, est_pos[1,:], 'g--')
+        ax[2,0].plot(all_times, tru_pos[2,:], 'b',
+                    all_times, est_pos[2,:], 'b--')
+        est_att = np.hstack([np.reshape(P.R().as_euler(), (3,1)) for P in est_traj.get_elements()])
+        tru_att = np.hstack([np.reshape(P.R().as_euler(), (3,1)) for P in tru_traj.get_elements()])
+        ax[0,1].plot(all_times, tru_att[0,:], 'r',
+                    all_times, est_att[0,:], 'r--')
+        ax[1,1].plot(all_times, tru_att[1,:], 'g',
+                    all_times, est_att[1,:], 'g--')
+        ax[2,1].plot(all_times, tru_att[2,:], 'b',
+                    all_times, est_att[2,:], 'b--')
 
         ax[0,0].set_ylabel("Pos_x")
         ax[1,0].set_ylabel("Pos_y")
@@ -220,35 +217,28 @@ if __name__ == '__main__':
         ax[0,1].set_title("Attitude")
         ax[2,1].set_xlabel('Time')
         for a in ax.ravel():
-            a.set_xlim((etimes[0], etimes[-1]))
+            a.set_xlim((all_times[0], all_times[-1]))
         for i in range(3):
             ax[i,1].set_ylim((-np.pi, np.pi))
 
         # Plot the full trajectories (position 3d)
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
-        ax.plot(np.hstack([pose._x._trans[0] for pose in aposes]),
-                np.hstack([pose._x._trans[1] for pose in aposes]),
-                np.hstack([pose._x._trans[2] for pose in aposes]), 'r')
-        ax.plot(np.hstack([pose._x._trans[0] for pose in eposes]),
-                np.hstack([pose._x._trans[1] for pose in eposes]),
-                np.hstack([pose._x._trans[2] for pose in eposes]), 'b--')
+        ax.plot(tru_pos[0,:], tru_pos[1,:], tru_pos[2,:], 'r')
+        ax.plot(est_pos[0,:], est_pos[1,:], est_pos[2,:], 'b--')
 
         ax.set_title("Estimated vs. True Trajectory")
         ax.set_xlabel("x (m)")
         ax.set_ylabel("y (m)")
         ax.set_zlabel("z (m)")
         ax.legend(["True", "Est."])
-        trail = np.hstack([pose.x().x() for pose in eposes])
-        ax.set_box_aspect(np.max(trail, axis=1)-np.min(trail,axis=1) + np.ones(3)*2)
+        ax.set_box_aspect(np.max(est_pos, axis=1)-np.min(est_pos,axis=1) + np.ones(3)*2)
 
         # Plot the full trajectories (position xy)
         fig = plt.figure()
         ax = fig.add_subplot(111)
-        ax.plot(np.hstack([pose._x._trans[0] for pose in aposes]),
-                np.hstack([pose._x._trans[1] for pose in aposes]), 'r')
-        ax.plot(np.hstack([pose._x._trans[0] for pose in eposes]),
-                np.hstack([pose._x._trans[1] for pose in eposes]), 'b--')
+        ax.plot(tru_pos[0,:], tru_pos[1,:], 'r')
+        ax.plot(est_pos[0,:], est_pos[1,:], 'b--')
 
         ax.set_title("Estimated vs. True Trajectory")
         ax.set_xlabel("x (m)")
