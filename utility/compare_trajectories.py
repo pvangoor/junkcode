@@ -13,18 +13,24 @@ import matplotlib.pyplot as plt
 def read_trajectory(fname: str, format_spec: str, min_time: float = -1.0) -> Trajectory:
     times = []
     poses = []
+
+    scol = 0
+    if format_spec[0].isdigit():
+        scol = int(format_spec[0])
+        format_spec = format_spec[1:]
+
     with open(fname, 'r') as file:
         reader = csv.reader(file)
         # Skip header
         next(reader)
         for line in reader:
-            t = float(line[0])
+            t = float(line[scol+0])
             if t < 0:
                 continue
             if min_time > 0 and t < min_time:
                 continue
 
-            pose = SE3.from_list(line[1:], format_spec)
+            pose = SE3.from_list(line[scol+1:], format_spec)
             times.append(t)
             poses.append(pose)
 
@@ -98,10 +104,10 @@ if __name__ == '__main__':
                         help="The file containing estimated poses.")
     parser.add_argument("gt_poses", metavar='g', type=str,
                         help="The file containing groundtruth poses.")
-    parser.add_argument("--eformat", type=str, default="xw",
-                        help="The format of estimated poses. Default xw")
-    parser.add_argument("--gformat", type=str, default="xw",
-                        help="The format of groundtruth poses. Default xw")
+    parser.add_argument("--eformat", type=str, default="0xw",
+                        help="The format of estimated poses. Default 0xw")
+    parser.add_argument("--gformat", type=str, default="0xw",
+                        help="The format of groundtruth poses. Default 0xw")
     parser.add_argument("--noplot", action='store_true',
                         help="Set to true to suppress plot output.")
     parser.add_argument("--start", type=float, default=0.0,
@@ -117,8 +123,12 @@ if __name__ == '__main__':
     est_traj = read_trajectory(args.est_poses, args.eformat, min_time)
 
     print("Aligning trajectories...")
-    tru_traj.truncate(est_traj.begin_time(), est_traj.end_time())
+    begin_time = max(tru_traj.begin_time(), est_traj.begin_time())
+    end_time = min(tru_traj.end_time(), est_traj.end_time())
+    tru_traj.truncate(begin_time, end_time)
+    est_traj.truncate(begin_time, end_time)
     tru_traj = tru_traj[est_traj.get_times()]
+
     est_traj, align_params = analysis.align_trajectory(
         est_traj, tru_traj, ret_params=True)
 
