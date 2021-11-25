@@ -17,3 +17,5 @@ makeDepthMaps/*/*.pfm
 practice/cmake/build/*
 practice/expressions/expressions
 practice/duals/duals
+visualisation/*.mp4
+visualisation/*.gif
