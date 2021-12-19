@@ -4,91 +4,89 @@ import os
 import argparse
 import progressbar
 
-parser = argparse.ArgumentParser(description="Undistort given image(s).")
-parser.add_argument('f',  type=str, help="The image(s) to undistort.")
-parser.add_argument('p',  type=str, help="The camera parameters.")
-parser.add_argument('--folder', action='store_true', help="Used to indicate we are converting a folder. Default: False.")
-parser.add_argument('--video', action='store_true', help="Used to indicate we are converting a video. Default: False.")
-parser.add_argument('--original_size', action='store_true', help="Used to indicate we want the frame to remain the same size. Default: False.")
-parser.add_argument('--extension', metavar='e',  type=str, default="png", help="The extension of the files to convert. Default: png.")
-args = parser.parse_args()
-
 # Read distortion parameters
-try:
-    fs = cv2.FileStorage(args.p, cv2.FILE_STORAGE_READ)
-    camera_matrix = fs.getNode("camera_matrix").mat()
-    dist_coeffs = fs.getNode("dist_coeffs").mat()
-except SystemError:
-    import yaml
-    import numpy as np
-    with open(args.p, 'r') as f:
-        data_dict = yaml.safe_load(f)
-    camera_matrix = np.reshape(data_dict["camera_matrix"], (3,3))
-    dist_coeffs = np.array(data_dict["dist_coeffs"]).ravel()
-
-print("Using Camera Matrix\n", camera_matrix)
-print("Using Distortion Coefficients\n", dist_coeffs)
 
 
-fname = args.f
-folder_flag = args.folder
-# Check if file or folder
-if not folder_flag and not args.video:
-    img = cv2.imread(fname)
-    img_undist = cv2.undistort(img, camera_matrix, dist_coeffs)
-    
-    ext_pos = fname.rfind('.')
-    out_str = fname[:ext_pos] + "_undistorted" + fname[ext_pos:]
-    cv2.imwrite(out_str, img_undist)
-    exit(0)
+def read_camera_parameters(fname: str):
+    try:
+        fs = cv2.FileStorage(fname, cv2.FILE_STORAGE_READ)
+        camera_matrix = fs.getNode("camera_matrix").mat()
+        dist_coeffs = fs.getNode("dist_coeffs").mat()
+    except SystemError as e:
+        print(e)
+        import yaml
+        import numpy as np
+        with open(fname, 'r') as f:
+            data_dict = yaml.safe_load(f)
+        camera_matrix = np.reshape(data_dict["camera_matrix"], (3, 3))
+        dist_coeffs = np.array(data_dict["dist_coeffs"]).ravel()
 
-# Deal with videos
-if args.video:
-    cap = cv2.VideoCapture(fname)
-    ext_pos = fname.rfind('.')
-    new_fname = fname[:ext_pos] + "_undistorted" + fname[ext_pos:]
+    return camera_matrix, dist_coeffs
 
-    ret, img = cap.read()
 
+def create_undistortion_maps(img, full_size=False):
     img_size = (img.shape[1], img.shape[0])
-    if not args.original_size:
-        new_camera_matrix, roi = cv2.getOptimalNewCameraMatrix(camera_matrix, dist_coeffs, img_size, 1.0)
+    udist_size = img_size
+    if full_size:
+        new_camera_matrix, roi = cv2.getOptimalNewCameraMatrix(
+            camera_matrix, dist_coeffs, img_size, 1.0)
         remaps = cv2.initUndistortRectifyMap(
             camera_matrix, dist_coeffs, None, new_camera_matrix, img_size, 5
         )
-        # img_undist = cv2.undistort(img, camera_matrix, dist_coeffs, new_camera_matrix)
         img_undist = cv2.remap(img, remaps[0], remaps[1], cv2.INTER_LINEAR)
-        img_size = (img_undist.shape[1], img_undist.shape[0])
+        udist_size = (img_undist.shape[1], img_undist.shape[0])
+    else:
+        remaps = cv2.initUndistortRectifyMap(
+            camera_matrix, dist_coeffs, None, camera_matrix, img_size, 5
+        )
+    return remaps, udist_size
 
-    writer = cv2.VideoWriter(new_fname, cv2.VideoWriter_fourcc('M','J','P','G'), cap.get(cv2.CAP_PROP_FPS), img_size, False)
 
-    while ret:
-        if len(img.shape) > 2:
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        
-        if args.original_size:
-            img_undist = cv2.undistort(img, camera_matrix, dist_coeffs)
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description="Undistort given image(s).")
+    parser.add_argument('parameters', metavar='p',
+                        type=str, help="The camera parameters.")
+    parser.add_argument('file_name', metavar='f', nargs='+',
+                        type=str, help="The image(s) to undistort.")
+    parser.add_argument('--video', action='store_true',
+                        help="Set this flag to convert videos instead.")
+    parser.add_argument('--full_size', action='store_true',
+                        help="Set this flag to show the full undistorted frame.")
+    args = parser.parse_args()
+
+    # Import camera parameters
+    camera_matrix, dist_coeffs = read_camera_parameters(args.parameters)
+    print("Using Camera Matrix\n", camera_matrix)
+    print("Using Distortion Coefficients\n", dist_coeffs)
+
+    # Prepare undistortion map using the first image.
+    remaps = None
+
+    for fname in args.file_name:
+        ext_pos = fname.rfind('.')
+        new_fname = fname[:ext_pos] + "_undistorted" + fname[ext_pos:]
+
+        if args.video:
+            # Handle videos
+            cap = cv2.VideoCapture(fname)
+            ret, img = cap.read()
+            remaps, udist_size = create_undistortion_maps(img, args.full_size)
+
+            writer = cv2.VideoWriter(new_fname, cv2.VideoWriter_fourcc(
+                *"X264"), cap.get(cv2.CAP_PROP_FPS), udist_size, isColor=(len(img.shape)>2))
+
+            while(ret):
+                img_undist = cv2.remap(img, remaps[0], remaps[1], cv2.INTER_LINEAR)
+                writer.write(img_undist)
+
+                ret, img = cap.read()
+            
+            print("Closing...")
+            cap.release()
+            writer.release()
+
         else:
+            # Handle images
             img_undist = cv2.remap(img, remaps[0], remaps[1], cv2.INTER_LINEAR)
-        writer.write(img_undist)
-        ret, img = cap.read()
-    
-    cap.release()
-    writer.release()
-    exit(0)
-    
-
-# If the program reaches here, we are dealing with a folder
-new_folder = fname[:-1]+"_undistorted/"
-if not os.path.exists(new_folder):
-    os.mkdir(new_folder)
-
-ext_str = args.extension
-file_names = os.listdir(fname)
-file_names = [f for f in file_names if f.endswith(ext_str)]
-for img_name in progressbar.progressbar(file_names):
-    img = cv2.imread(os.path.join(fname, img_name))
-    img_undist = cv2.undistort(img, camera_matrix, dist_coeffs)
-    cv2.imwrite(os.path.join(new_folder, img_name), img_undist)
-
+            cv2.imwrite(new_fname, img_undist)
 

@@ -20,13 +20,6 @@ def update_animation(frame, trail_line, frame_artist, poses, ax):
         
         frame_artist.set_pose_data(pose)
 
-        
-        
-
-
-
-
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Animate the trajectory of a pose in a file.")
     parser.add_argument("file", metavar='f', type=str, help="Name fo the file with the poses.")

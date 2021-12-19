@@ -5,6 +5,27 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "g++-10 - Build and debug active file",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${fileDirname}/${fileBasenameNoExtension}",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${fileDirname}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "preLaunchTask": "C/C++: g++-10 build active file",
+            "miDebuggerPath": "/usr/bin/gdb"
+        },
+        {
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",
@@ -20,8 +41,7 @@
             "args": [
                 "rosbag/phone_stationary2.txt"
             ]
-        }
-
+        },
         {
             "name": "Video & IMU to Rosbag",
             "type": "python",

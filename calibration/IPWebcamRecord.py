@@ -16,7 +16,7 @@ while not flag:
     flag, frame = cap.read()
 # out = cv2.VideoWriter(videoFname, cap.get(cv2.CAP_PROP_FOURCC), cap.get(cv2.CAP_PROP_FOURCC))
 # out = cv2.VideoWriter(videoFname, cv2.VideoWriter_fourcc('M','J','P','G'), 20, (frame.shape[1], frame.shape[0]))
-out = cv2.VideoWriter(videoFname, cv2.VideoWriter_fourcc('H','2','6','4'), 20, (frame.shape[1], frame.shape[0]))
+out = cv2.VideoWriter(videoFname, cv2.VideoWriter_fourcc(*"X264"), 20, (frame.shape[1], frame.shape[0]))
 
 diffAvg = 0.0
 diffCount = 0

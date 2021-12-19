@@ -31,7 +31,7 @@ if args.video:
     new_fname = fname[:ext_pos] + "_equalised" + fname[ext_pos:]
 
     ret, img = cap.read()
-    writer = cv2.VideoWriter(new_fname, cv2.VideoWriter_fourcc('M','J','P','G'), cap.get(cv2.CAP_PROP_FPS), (img.shape[1], img.shape[0]), False)
+    writer = cv2.VideoWriter(new_fname, cv2.VideoWriter_fourcc(*"X264"), cap.get(cv2.CAP_PROP_FPS), (img.shape[1], img.shape[0]), False)
 
     while ret:
         if len(img.shape) > 2:

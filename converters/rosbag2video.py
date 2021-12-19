@@ -36,7 +36,7 @@ for topic, msg, t in bag.read_messages():
         cv_img = bridge.imgmsg_to_cv2(msg)
 
         if not initialised:
-            out = cv2.VideoWriter(videoFname, cv2.VideoWriter_fourcc('H','2','6','4'), frame_rate, (cv_img.shape[1], cv_img.shape[0]), isColor=(len(cv_img.shape)>2))
+            out = cv2.VideoWriter(videoFname, cv2.VideoWriter_fourcc(*"X264"), frame_rate, (cv_img.shape[1], cv_img.shape[0]), isColor=(len(cv_img.shape)>2))
             initialised = True
         
         out.write(cv_img)
