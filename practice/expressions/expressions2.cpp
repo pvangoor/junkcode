@@ -3,6 +3,7 @@
 #include <concepts>
 #include <type_traits>
 #include <cmath>
+#include <memory>
 
 using namespace std;
 
@@ -14,7 +15,7 @@ using namespace std;
 template<typename E>
 struct MathExpression {
    double value() const { return static_cast<const E&>(*this).value(); }
-   double derivative() const { return static_cast<const E&>(*this).derivative(); }
+   double derivative(const void* param) const { return static_cast<const E&>(*this).derivative(param); }
 
    operator double() {return value();}
 };
@@ -33,36 +34,37 @@ double math_value(const E& expr) {
    return expr.value();
 }
 template<math_expr E>
-double math_derivative(const E& expr) {
-   return expr.derivative();
+double math_derivative(const E& expr, const void* param) {
+   return expr.derivative(param);
 }
 template<typename ValType> requires is_arithmetic<ValType>::value 
 double math_value(const ValType& num) {
    return num;
 }
 template<typename ValType> requires is_arithmetic<ValType>::value 
-double math_derivative(const ValType& num) {
+double math_derivative(const ValType& num, const void* param) {
    return 0.0;
 }
 
 // Parameters are the interesting bit.
 struct Par : MathExpression<Par> {
     double val;
-    double der = 1.0;
 
     Par(const double v) : val(v) {};
     double value() const {return val;}
-    double derivative() const {return der;}
+    double derivative(const void* param) const {
+       return this==param ? 1.0 : 0.0;
+       }
 
-    template <num_expr E>
-    Par(MathExpression<E> const& expr) : val(expr.value()), der(expr.derivative()) {}
+   //  template <num_expr E>
+   //  Par(MathExpression<E> const& expr) : val(expr.value()), der(expr.derivative(param)) {}
 
-    template <num_expr E>
-    Par& operator=(MathExpression<E> const& expr) {
-       val = expr.value();
-       der = expr.derivative();
-       return *this;
-    }
+   //  template <num_expr E>
+   //  Par& operator=(MathExpression<E> const& expr) {
+   //     val = expr.value();
+   //     der = expr.derivative(param);
+   //     return *this;
+   //  }
     
 };
 
@@ -78,8 +80,8 @@ struct MathProduct : MathExpression<MathProduct<E1,E2>> {
    double value() const {
       return math_value(operand1) * math_value(operand2);
    }
-   double derivative() const {
-      return math_derivative(operand1) * math_value(operand2) + math_value(operand1) * math_derivative(operand2);
+   double derivative(const void* param) const {
+      return math_derivative(operand1, param) * math_value(operand2) + math_value(operand1) * math_derivative(operand2, param);
    }
    MathProduct(const E1& op1, const E2& op2) : operand1(op1), operand2(op2) {};
 };
@@ -97,8 +99,8 @@ struct MathSum : MathExpression<MathSum<E1,E2>> {
    double value() const {
       return math_value(operand1) + math_value(operand2);
    }
-   double derivative() const {
-      return math_derivative(operand1) + math_derivative(operand2);
+   double derivative(const void* param) const {
+      return math_derivative(operand1, param) + math_derivative(operand2, param);
    }
    MathSum(const E1& op1, const E2& op2) : operand1(op1), operand2(op2) {};
 };
@@ -116,8 +118,8 @@ struct MathDiff : MathExpression<MathDiff<E1,E2>> {
    double value() const {
       return math_value(operand1) - math_value(operand2);
    }
-   double derivative() const {
-      return math_derivative(operand1) - math_derivative(operand2);
+   double derivative(const void* param) const {
+      return math_derivative(operand1, param) - math_derivative(operand2, param);
    }
    MathDiff(const E1& op1, const E2& op2) : operand1(op1), operand2(op2) {};
 };
@@ -134,8 +136,8 @@ struct MathNeg : MathExpression<MathNeg<E>> {
    double value() const {
       return - math_value(operand);
    }
-   double derivative() const {
-      return - math_derivative(operand);
+   double derivative(const void* param) const {
+      return - math_derivative(operand, param);
    }
    MathNeg(const E& op) : operand(op) {};
 };
@@ -153,9 +155,9 @@ struct MathDivision : MathExpression<MathDivision<E1,E2>> {
    double value() const {
       return math_value(operand1) / math_value(operand2);
    }
-   double derivative() const {
+   double derivative(const void* param) const {
       const double v = math_value(operand2);
-      return (math_derivative(operand1) * math_value(operand2) - math_value(operand1) * math_derivative(operand2)) / (v*v);
+      return (math_derivative(operand1, param) * math_value(operand2) - math_value(operand1) * math_derivative(operand2, param)) / (v*v);
    }
    MathDivision(const E1& op1, const E2& op2) : operand1(op1), operand2(op2) {};
 };
@@ -163,6 +165,67 @@ struct MathDivision : MathExpression<MathDivision<E1,E2>> {
 template<num_expr E1, num_expr E2>
 MathDivision<E1,E2> operator/(const E1& op1, const E2& op2) {
    return MathDivision<E1,E2>(op1, op2);
+}
+
+// CMath
+
+// Powers
+// pow
+// sqrt
+// cbrt
+// abs
+
+// Forward trig
+
+template<math_expr E>
+struct MathCos : MathExpression<MathCos<E>> {
+   ConstMath<E> operand;
+   double value() const {
+      return cos(math_value(operand));
+   }
+   double derivative(const void* param) const {
+      return -sin(math_value(operand)) * math_derivative(operand, param);
+   }
+   MathCos(const E& op) : operand(op) {};
+};
+
+template<math_expr E>
+MathCos<E> cos(const E& op) {
+   return MathCos<E>(op);
+}
+
+template<math_expr E>
+struct MathSin : MathExpression<MathSin<E>> {
+   ConstMath<E> operand;
+   double value() const {
+      return sin(math_value(operand));
+   }
+   double derivative(const void* param) const {
+      return cos(math_value(operand)) * math_derivative(operand, param);
+   }
+   MathSin(const E& op) : operand(op) {};
+};
+
+template<math_expr E>
+MathSin<E> sin(const E& op) {
+   return MathSin<E>(op);
+}
+
+template<math_expr E>
+struct MathTan : MathExpression<MathTan<E>> {
+   ConstMath<E> operand;
+   double value() const {
+      return tan(math_value(operand));
+   }
+   double derivative(const void* param) const {
+      return  math_derivative(operand, param) / (cos(math_value(operand))*cos(math_value(operand)));
+   }
+   MathTan(const E& op) : operand(op) {};
+};
+
+template<math_expr E>
+MathTan<E> tan(const E& op) {
+   return MathTan<E>(op);
 }
 
 
@@ -178,10 +241,13 @@ int main() {
    // Write C++ code here
    Par x = 2.0;
 
-   auto z = - 5.0 / (4 * (x + 2) + 3.0) + 15 - 2  - 2*x + 3*x*x - 5 / x ;
+   // auto z = - 5.0 / (4 * (x + 2) + 3.0) + 15 - 2  - 2*x + 3*x*x - 5 / x ;
+   auto z = 5*x*x - x;
 
-   cout << z.value() << endl;
-   cout << z.derivative() << endl;
+   cout << z.derivative(&x) << endl;
+
+   // cout << z.value() << endl;
+   // cout << z.derivative(const void* param) << endl;
 
    return 0;
 }
