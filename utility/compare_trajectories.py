@@ -18,13 +18,19 @@ def read_trajectory(fname: str, format_spec: str, min_time: float = -1.0) -> Tra
     if format_spec[0].isdigit():
         scol = int(format_spec[0])
         format_spec = format_spec[1:]
+    
+    time_scale = 1.0
+    if format_spec[0] == 'n':
+        time_scale = 1.0e-9
+        format_spec = format_spec[1:]
+
 
     with open(fname, 'r') as file:
         reader = csv.reader(file)
         # Skip header
         next(reader)
         for line in reader:
-            t = float(line[scol+0])
+            t = float(line[scol+0]) * time_scale
             if t < 0:
                 continue
             if min_time > 0 and t < min_time:
