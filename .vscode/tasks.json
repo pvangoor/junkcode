@@ -10,6 +10,7 @@
                 "-o",
                 "${fileDirname}/${fileBasenameNoExtension}",
                 "-std=c++2a",
+                "-fconcepts",
             ],
             "options": {
                 "cwd": "${fileDirname}"
