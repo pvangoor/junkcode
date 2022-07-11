@@ -1,4 +1,4 @@
-n_runs=10
+n_runs=10000
 output0=""
 for ((i=0;i<$n_runs;++i)); do
     output1=$(./random_ints)

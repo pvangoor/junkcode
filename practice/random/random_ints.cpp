@@ -6,10 +6,10 @@ int main() {
     std::mt19937 mt(0);
 
     // Create uniform int distribution between 0 and 100.
-    std::uniform_int_distribution<size_t> dist(0, 100);
 
     // Print random ints from the distribution.
-    for (int i=0;i<10;++i) {
+    for (int i=0;i<1000;++i) {
+        std::uniform_int_distribution<size_t> dist(0, 100);
         std::cout << dist(mt) << ", ";
     }
 
