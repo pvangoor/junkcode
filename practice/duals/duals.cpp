@@ -100,15 +100,39 @@ template<typename T> T my_functor(const T& x) {
    return sin(z);
 }
 
+struct myFunctorStruct {
+   template<typename Scalar>
+   Scalar operator()(const Scalar& x) {
+         return my_functor<Scalar>(x);
+   }
+};
+
+struct myFunctorStruct2 {
+   template<typename Scalar>
+   Scalar operator()(const Scalar& x) {
+         return x*x;
+   }
+};
+
 double my_functor_der(const double& x) {
    double drdx = cos(2* exp(x) + 3) * exp(x) * 2;
    return drdx;
 }
 
+template<typename FunctionStruct> double derivative(const double& x) {
+   return FunctionStruct()(Dual<double>(x,1.0)).e;
+}
 
-int main()
-{
-   int reps = 1e9;
+template<typename F1, typename F2>
+struct Composition {
+   template<typename T>
+   T operator() (const T& x) {
+      return F1()(F2()(x));
+   }
+};
+
+void timeDerivativeTypes() {
+   int reps = 1e8;
    chrono::time_point<chrono::steady_clock> start;
    chrono::duration<double> dur;
 
@@ -120,7 +144,16 @@ int main()
       double dfdx = my_functor(x).e;
    }
    dur = chrono::steady_clock::now() - start;
-   cout << "Dual: " << dur.count() << endl;
+   cout << "Template Dual: " << dur.count() << endl;
+
+   start = chrono::steady_clock::now();
+   srand(0);
+   for (int k=0;k<reps;++k) {
+      double r = static_cast<double>(rand()) /static_cast<double>(RAND_MAX);
+      double dfdx = derivative<myFunctorStruct>(r);
+   }
+   dur = chrono::steady_clock::now() - start;
+   cout << "Struct Dual: " << dur.count() << endl;
 
    start = chrono::steady_clock::now();
    srand(0);
@@ -139,6 +172,24 @@ int main()
    }
    dur = chrono::steady_clock::now() - start;
    cout << "Analytic: " << dur.count() << endl;
+}
+
+
+
+
+
+
+int main()
+{
+   // timeDerivativeTypes();
+
+   // Test implementations of functors
+   std::cout << derivative<myFunctorStruct>(1.0) << std::endl;
+   std::cout << my_functor_der(1.0) << std::endl;
+
+   std::cout << derivative<Composition<myFunctorStruct2, myFunctorStruct>>(1.0) << std::endl;
+
+
 
    return 0;
 }
