@@ -3,6 +3,9 @@
 #include <cmath>
 #include <chrono>
 
+#include <tuple>
+#include <utility>
+
 using namespace std;
 
 template <typename Scalar = double>
@@ -123,11 +126,15 @@ template<typename FunctionStruct> double derivative(const double& x) {
    return FunctionStruct()(Dual<double>(x,1.0)).e;
 }
 
-template<typename F1, typename F2>
+template<typename Functor1, typename... Functors>
 struct Composition {
    template<typename T>
    T operator() (const T& x) {
-      return F1()(F2()(x));
+      if constexpr (sizeof...(Functors) > 0) {
+         return Functor1()(Composition<Functors...>()(x));
+      } else {
+         return Functor1()(x);
+      }
    }
 };
 
@@ -188,6 +195,9 @@ int main()
    std::cout << my_functor_der(1.0) << std::endl;
 
    std::cout << derivative<Composition<myFunctorStruct2, myFunctorStruct>>(1.0) << std::endl;
+
+   std::cout << Composition<myFunctorStruct2,myFunctorStruct2,myFunctorStruct2>()(2.0) << std::endl;
+   std::cout << derivative<Composition<myFunctorStruct2, myFunctorStruct2, myFunctorStruct2>>(1.0) << std::endl;
 
 
 
